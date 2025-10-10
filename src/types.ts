@@ -90,6 +90,8 @@ export interface Floor3dCardConfig {
   radius: number;
   sky: string;
   north: any;
+  day_night_cycle: string;
+  moon_entity: string;
   x: number;
   y: number;
   z: number;

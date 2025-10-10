@@ -128,6 +128,8 @@ export class Floor3dCard extends LitElement {
   private _torchTarget: THREE.Object3D;
   private _sky: Sky;
   private _sun: THREE.DirectionalLight;
+  private _moon: THREE.DirectionalLight;
+  private _moonPhase: string;
   _helper: THREE.DirectionalLightHelper;
   private _modelready: boolean;
   private _maxtextureimage: number;
@@ -316,6 +318,8 @@ export class Floor3dCard extends LitElement {
       extralightmode: 'no',
       show_axes: 'no',
       sky: 'no',
+      day_night_cycle: 'no',
+      moon_entity: 'sensor.moon',
       overlay_bgcolor: 'transparent',
       overlay_fgcolor: 'black',
       overlay_alignment: 'top-left',
@@ -1106,6 +1110,13 @@ export class Floor3dCard extends LitElement {
           if (torerender) {
             this._render();
           }
+
+          // Update sun/moon position if sky mode is enabled
+          if (this._config.sky === 'yes' && this._sun) {
+            if (hass.states['sun.sun']) {
+              this._updateSunPosition();
+            }
+          }
         }
       }
     } catch (e) {
@@ -1147,7 +1158,7 @@ export class Floor3dCard extends LitElement {
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -5;
     ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = false;
+    ground.receiveShadow = true;  // Enable ground to receive shadows
     ground.castShadow = false;
     //this._bboxmodel.add(ground);
     this._scene.add(ground);
@@ -1223,6 +1234,11 @@ export class Floor3dCard extends LitElement {
     this._renderer.shadowMap.needsUpdate = true;
 
     //FOR DEBUG: this._scene.add(new THREE.CameraHelper(this._sun.shadow.camera));
+
+    // Initialize moon if day/night cycle is enabled
+    if (this._config.day_night_cycle === 'yes') {
+      this._initMoon();
+    }
   }
 
   private _initTorch(): void {
@@ -1249,6 +1265,107 @@ export class Floor3dCard extends LitElement {
         this._torch.intensity = Number(this._config.globalLightPower);
       }
     }
+  }
+
+  private _getMoonIntensity(): number {
+    const moonEntity = this._config.moon_entity || 'sensor.moon';
+
+    if (!this._hass.states[moonEntity]) {
+      console.warn(`Moon entity '${moonEntity}' not found, using default intensity`);
+      return 0.3;
+    }
+
+    const phase = this._hass.states[moonEntity].state.toLowerCase();
+
+    // Map moon phases to intensity (0.05 - 0.8)
+    const phaseIntensity: { [key: string]: number } = {
+      'new_moon': 0.05,
+      'waxing_crescent': 0.15,
+      'first_quarter': 0.35,
+      'waxing_gibbous': 0.55,
+      'full_moon': 0.8,
+      'waning_gibbous': 0.55,
+      'last_quarter': 0.35,
+      'waning_crescent': 0.15
+    };
+
+    return phaseIntensity[phase] || 0.3;
+  }
+
+  private _initMoon(): void {
+    console.log('Init Moon');
+
+    // Create moon with cool bluish-white light
+    this._moon = new THREE.DirectionalLight(0xadd8e6, 0);
+    this._scene.add(this._moon);
+
+    // Configure moon shadows (same settings as sun)
+    this._moon.castShadow = true;
+    const d = 1000;
+    this._moon.shadow.mapSize.width = 1024;
+    this._moon.shadow.mapSize.height = 1024;
+    this._moon.shadow.camera.near = 4000;
+    this._moon.shadow.camera.far = 6000;
+    this._moon.shadow.camera.left = -d;
+    this._moon.shadow.camera.right = d;
+    this._moon.shadow.camera.top = d;
+    this._moon.shadow.camera.bottom = -d;
+  }
+
+  private _updateSunPosition(): void {
+    if (!this._sun || !this._sky) return;
+
+    const azimuth = Number(this._hass.states['sun.sun'].attributes['azimuth']);
+    const elevation = Number(this._hass.states['sun.sun'].attributes['elevation']);
+
+    // Calculate sun vector using existing spherical coordinate logic
+    let south: THREE.Vector3 = new THREE.Vector3();
+    if (this._config.north) {
+      south.x = -this._config.north.x;
+      south.z = -this._config.north.z;
+      south.y = 0;
+    } else {
+      south.set(0, 0, -1);
+    }
+
+    let south_sphere = new THREE.Spherical();
+    south_sphere.setFromVector3(south);
+    south_sphere.phi = THREE.MathUtils.degToRad(90 - elevation);
+    south_sphere.theta = THREE.MathUtils.degToRad(
+      THREE.MathUtils.radToDeg(south_sphere.theta) - azimuth
+    );
+
+    const sun = new THREE.Vector3();
+    sun.setFromSphericalCoords(1, south_sphere.phi, south_sphere.theta);
+
+    // Update sun position
+    this._sun.position.copy(sun.clone().multiplyScalar(5000));
+
+    // Update sky shader
+    const uniforms = this._sky.material.uniforms;
+    uniforms['sunPosition'].value.copy(sun);
+
+    // Handle day/night transition
+    if (sun.y < 0 || elevation < 0) {
+      // Nighttime: disable sun, enable moon
+      this._sun.intensity = 0;
+      if (this._config.day_night_cycle === 'yes' && this._moon) {
+        this._moon.intensity = this._getMoonIntensity();
+        // Position moon opposite to sun
+        const moonVector = sun.clone().negate();
+        moonVector.y = Math.abs(moonVector.y); // Keep moon above horizon
+        this._moon.position.copy(moonVector.multiplyScalar(5000));
+      }
+    } else {
+      // Daytime: enable sun, disable moon
+      this._sun.intensity = 2.0;
+      if (this._config.day_night_cycle === 'yes' && this._moon) {
+        this._moon.intensity = 0;
+      }
+    }
+
+    // Mark shadow map for update
+    this._renderer.shadowMap.needsUpdate = true;
   }
 
   private _initAmbient(): void {

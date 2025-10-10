@@ -1158,6 +1158,27 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                     <mwc-list-item value="yes">yes</mwc-list-item>
                     <mwc-list-item value="no">no</mwc-list-item>
                 </floor3d-select>
+                <floor3d-select
+                  label="Day/Night Cycle (yes/<no>)"
+                  @selected=${this._valueChanged}
+                  .value=${config.day_night_cycle ? config.day_night_cycle : 'no'}
+                  .configObject=${config}
+                  .configAttribute=${'day_night_cycle'}
+                  .ignoreNull=${false}
+                  @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <mwc-list-item></mwc-list-item>
+                    <mwc-list-item value="yes">yes</mwc-list-item>
+                    <mwc-list-item value="no">no</mwc-list-item>
+                </floor3d-select>
+                <paper-input
+                  editable
+                  label="Moon Entity (default: sensor.moon)"
+                  .value=${config.moon_entity ? config.moon_entity : 'sensor.moon'}
+                  .configObject=${config}
+                  .configAttribute=${'moon_entity'}
+                  @value-changed=${this._valueChanged}
+                ></paper-input>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"
