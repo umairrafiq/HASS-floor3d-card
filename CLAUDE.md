@@ -18,19 +18,28 @@ Runs linting and rollup to create production build in `dist/`.
 ```bash
 npm start
 ```
-Runs rollup in watch mode with a development server on `http://0.0.0.0:5000`.
+Runs rollup in watch mode with a development server on `http://0.0.0.0:5000`. The server serves files from `dist/` directory with CORS enabled for testing with Home Assistant.
 
 ### Lint
 ```bash
 npm run lint
 ```
-Runs ESLint on TypeScript files in `src/`.
+Runs ESLint on TypeScript files in `src/`. Note: Several strict TypeScript rules are intentionally disabled (see `.eslintrc.js`) due to the dynamic nature of Home Assistant entity interactions and the Three.js integration (e.g., `no-explicit-any`, `no-unused-vars`).
 
 ### Rollup Only
 ```bash
 npm run rollup
 ```
 Builds without linting.
+
+## Build System
+
+### Rollup Configuration
+- **rollup.config.js**: Production build configuration
+- **rollup.config.dev.js**: Development build configuration with live server
+- **rollup-ignore-plugin.js**: Custom plugin that excludes Material Web Components from bundling (they're imported for side effects only). This reduces bundle size by preventing duplicate Material component code.
+
+The build process uses TypeScript compilation, Babel transpilation, and Terser minification. In development mode, it includes a live server with hot reloading.
 
 ## Architecture
 
@@ -141,6 +150,38 @@ The editor and helpers ensure:
 - Object group references are valid
 - Required parameters for each type3d are present
 
+## Low Poly World
+
+### Low Poly World (`low_poly_world: 'yes'`)
+Creates a stylized neighborhood environment around the main house model:
+
+**Features:**
+- **Road Grid**: Automatically generates crossing roads with white dashed markings
+- **Neighbor Buildings**: Low poly cube houses with pyramid roofs positioned around main model
+- **Semi-Transparent**: Neighboring buildings use 30% opacity to avoid obstructing main house view
+- **Smart Positioning**: Houses placed in 8 sectors around the main model to avoid overlap
+
+**Configuration:**
+```yaml
+low_poly_world: 'yes'          # Enable low poly world
+world_size: 2000               # Optional, size of world in units (default: 2000)
+num_neighbor_houses: 8         # Optional, number of neighbor houses (default: 8)
+road_width: 200                # Optional, width of roads (default: 200)
+```
+
+**Implementation Details:**
+- `_initLowPolyWorld()` (floor3d-card.ts:1396): Main initialization function
+- `_createRoads()` (floor3d-card.ts:1418): Creates road grid and markings
+- `_createNeighborHouses()` (floor3d-card.ts:1463): Generates low poly houses
+- `_generateHousePositions()` (floor3d-card.ts:1546): Calculates smart house positions
+- Called from `_onLoaded3DModel()` after scene initialization (floor3d-card.ts:1791)
+
+**Visual Details:**
+- Roads: Dark gray (#333333) with white dashed center lines
+- Houses: Light gray (#cccccc) cubes with brown (#8b4513) pyramid roofs
+- Windows: Sky blue (#87ceeb) squares with 20% opacity
+- All elements receive/cast shadows when shadow mode is enabled
+
 ## Sky Mode and Day/Night Cycle
 
 ### Sky Mode (`sky: 'yes'`)
@@ -213,6 +254,11 @@ north:                     # House orientation for correct shadow direction
 - Scene setup happens in `connectedCallback()` and `firstUpdated()`
 - Animation loop is in `animate()` method
 - Material/mesh manipulation happens in entity binding sections
+
+### Testing changes locally:
+1. Run `npm start` to start development server
+2. In Home Assistant, add the card resource pointing to `http://YOUR_IP:5000/floor3d-card.js`
+3. Changes will auto-rebuild but require browser refresh to see updates
 
 ## Distribution
 

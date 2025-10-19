@@ -1179,6 +1179,43 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                   .configAttribute=${'moon_entity'}
                   @value-changed=${this._valueChanged}
                 ></paper-input>
+                <floor3d-select
+                  label="Low Poly World (<yes>/no)"
+                  @selected=${this._valueChanged}
+                  .value=${config.low_poly_world ? config.low_poly_world : 'no'}
+                  .configObject=${config}
+                  .configAttribute=${'low_poly_world'}
+                  .ignoreNull=${false}
+                  @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <mwc-list-item></mwc-list-item>
+                    <mwc-list-item value="yes">yes</mwc-list-item>
+                    <mwc-list-item value="no">no</mwc-list-item>
+                </floor3d-select>
+                <paper-input
+                  editable
+                  label="World Size (default: 2000)"
+                  .value=${config.world_size ? config.world_size : '2000'}
+                  .configObject=${config}
+                  .configAttribute=${'world_size'}
+                  @value-changed=${this._valueChanged}
+                ></paper-input>
+                <paper-input
+                  editable
+                  label="Number of Neighbor Houses (default: 8)"
+                  .value=${config.num_neighbor_houses ? config.num_neighbor_houses : '8'}
+                  .configObject=${config}
+                  .configAttribute=${'num_neighbor_houses'}
+                  @value-changed=${this._valueChanged}
+                ></paper-input>
+                <paper-input
+                  editable
+                  label="Road Width (default: 200)"
+                  .value=${config.road_width ? config.road_width : '200'}
+                  .configObject=${config}
+                  .configAttribute=${'road_width'}
+                  @value-changed=${this._valueChanged}
+                ></paper-input>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"

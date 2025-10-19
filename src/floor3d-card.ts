@@ -1393,6 +1393,185 @@ export class Floor3dCard extends LitElement {
     this._scene.add(this._ambient_light);
   }
 
+  private _initLowPolyWorld(): void {
+    console.log('Init Low Poly World');
+
+    // Get configuration with defaults
+    const worldSize = this._config.world_size || 2000;
+    const numHouses = this._config.num_neighbor_houses || 8;
+    const roadWidth = this._config.road_width || 200;
+
+    // Calculate bounding box of main model to position world elements
+    const bbox = new THREE.Box3().setFromObject(this._bboxmodel);
+    const center = new THREE.Vector3();
+    bbox.getCenter(center);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+
+    // Create road grid around the house
+    this._createRoads(center, worldSize, roadWidth);
+
+    // Create neighboring houses
+    this._createNeighborHouses(center, worldSize, roadWidth, numHouses, size);
+  }
+
+  private _createRoads(center: THREE.Vector3, worldSize: number, roadWidth: number): void {
+    // Road material - dark gray asphalt
+    const roadMaterial = new THREE.MeshLambertMaterial({
+      color: 0x333333,
+      side: THREE.DoubleSide
+    });
+
+    // Create horizontal road
+    const roadHorizontal = new THREE.PlaneGeometry(worldSize, roadWidth);
+    const roadH = new THREE.Mesh(roadHorizontal, roadMaterial);
+    roadH.rotation.x = -Math.PI / 2;
+    roadH.position.set(center.x, -4, center.z);
+    roadH.receiveShadow = true;
+    this._scene.add(roadH);
+
+    // Create vertical road (crossing)
+    const roadVertical = new THREE.PlaneGeometry(roadWidth, worldSize);
+    const roadV = new THREE.Mesh(roadVertical, roadMaterial);
+    roadV.rotation.x = -Math.PI / 2;
+    roadV.position.set(center.x, -4, center.z);
+    roadV.receiveShadow = true;
+    this._scene.add(roadV);
+
+    // Add road markings (white dashed lines)
+    const markingMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const markingGeometry = new THREE.PlaneGeometry(10, 2);
+
+    // Horizontal road markings
+    for (let i = -worldSize / 2; i < worldSize / 2; i += 40) {
+      const marking = new THREE.Mesh(markingGeometry, markingMaterial);
+      marking.rotation.x = -Math.PI / 2;
+      marking.position.set(center.x + i, -3.9, center.z);
+      this._scene.add(marking);
+    }
+
+    // Vertical road markings
+    for (let i = -worldSize / 2; i < worldSize / 2; i += 40) {
+      const marking = new THREE.Mesh(markingGeometry, markingMaterial);
+      marking.rotation.x = -Math.PI / 2;
+      marking.rotation.z = Math.PI / 2;
+      marking.position.set(center.x, -3.9, center.z + i);
+      this._scene.add(marking);
+    }
+  }
+
+  private _createNeighborHouses(
+    center: THREE.Vector3,
+    worldSize: number,
+    roadWidth: number,
+    numHouses: number,
+    mainHouseSize: THREE.Vector3
+  ): void {
+    // Semi-transparent material for neighbor houses
+    const houseMaterial = new THREE.MeshLambertMaterial({
+      color: 0xcccccc,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.DoubleSide
+    });
+
+    const roofMaterial = new THREE.MeshLambertMaterial({
+      color: 0x8b4513,
+      transparent: true,
+      opacity: 0.3
+    });
+
+    const windowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x87ceeb,
+      transparent: true,
+      opacity: 0.2
+    });
+
+    // Calculate safe positions around the main house
+    const minDistance = Math.max(mainHouseSize.x, mainHouseSize.z) * 1.5 + roadWidth;
+    const positions = this._generateHousePositions(center, worldSize, minDistance, numHouses);
+
+    positions.forEach((pos, index) => {
+      const houseGroup = new THREE.Group();
+
+      // Randomize house dimensions for variety
+      const houseWidth = 60 + Math.random() * 40;
+      const houseDepth = 60 + Math.random() * 40;
+      const houseHeight = 80 + Math.random() * 60;
+
+      // Main house body (cube)
+      const houseGeometry = new THREE.BoxGeometry(houseWidth, houseHeight, houseDepth);
+      const house = new THREE.Mesh(houseGeometry, houseMaterial);
+      house.position.y = houseHeight / 2;
+      house.castShadow = true;
+      house.receiveShadow = true;
+      houseGroup.add(house);
+
+      // Roof (pyramid)
+      const roofGeometry = new THREE.ConeGeometry(
+        Math.max(houseWidth, houseDepth) * 0.7,
+        houseHeight * 0.4,
+        4
+      );
+      const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = houseHeight + (houseHeight * 0.2);
+      roof.castShadow = true;
+      houseGroup.add(roof);
+
+      // Add windows
+      const windowSize = 10;
+      const windowSpacing = 20;
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const windowGeometry = new THREE.PlaneGeometry(windowSize, windowSize);
+          const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+          window1.position.set(
+            (i - 0.5) * windowSpacing,
+            houseHeight * 0.3 + j * windowSpacing,
+            houseDepth / 2 + 0.5
+          );
+          houseGroup.add(window1);
+        }
+      }
+
+      // Position the house group
+      houseGroup.position.set(pos.x, 0, pos.z);
+      houseGroup.rotation.y = Math.random() * Math.PI / 4 - Math.PI / 8; // Slight random rotation
+
+      this._scene.add(houseGroup);
+    });
+  }
+
+  private _generateHousePositions(
+    center: THREE.Vector3,
+    worldSize: number,
+    minDistance: number,
+    count: number
+  ): THREE.Vector3[] {
+    const positions: THREE.Vector3[] = [];
+    const halfWorld = worldSize / 2;
+    const sectors = [
+      { xMin: -halfWorld, xMax: -minDistance, zMin: -halfWorld, zMax: -minDistance },  // Top-left
+      { xMin: minDistance, xMax: halfWorld, zMin: -halfWorld, zMax: -minDistance },     // Top-right
+      { xMin: -halfWorld, xMax: -minDistance, zMin: minDistance, zMax: halfWorld },     // Bottom-left
+      { xMin: minDistance, xMax: halfWorld, zMin: minDistance, zMax: halfWorld },       // Bottom-right
+      { xMin: -minDistance, xMax: minDistance, zMin: -halfWorld, zMax: -minDistance },  // Top-center
+      { xMin: -minDistance, xMax: minDistance, zMin: minDistance, zMax: halfWorld },    // Bottom-center
+      { xMin: -halfWorld, xMax: -minDistance, zMin: -minDistance, zMax: minDistance },  // Left-center
+      { xMin: minDistance, xMax: halfWorld, zMin: -minDistance, zMax: minDistance },    // Right-center
+    ];
+
+    for (let i = 0; i < Math.min(count, sectors.length); i++) {
+      const sector = sectors[i];
+      const x = center.x + sector.xMin + Math.random() * (sector.xMax - sector.xMin);
+      const z = center.z + sector.zMin + Math.random() * (sector.zMax - sector.zMin);
+      positions.push(new THREE.Vector3(x, 0, z));
+    }
+
+    return positions;
+  }
+
   protected display3dmodel(): void {
     //load the model into the GL Renderer
 
@@ -1607,6 +1786,11 @@ export class Floor3dCard extends LitElement {
       }
 
       this._initAmbient();
+
+      // Initialize low poly world if enabled
+      if (this._config.low_poly_world === 'yes') {
+        this._initLowPolyWorld();
+      }
 
       this._getOverlay();
 

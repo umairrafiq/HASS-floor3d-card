@@ -92,6 +92,10 @@ export interface Floor3dCardConfig {
   north: any;
   day_night_cycle: string;
   moon_entity: string;
+  low_poly_world: string;
+  world_size: number;
+  num_neighbor_houses: number;
+  road_width: number;
   x: number;
   y: number;
   z: number;
