@@ -1491,7 +1491,7 @@ export class Floor3dCard extends LitElement {
     const minDistance = Math.max(mainHouseSize.x, mainHouseSize.z) * 1.5 + roadWidth;
     const positions = this._generateHousePositions(center, worldSize, minDistance, numHouses);
 
-    positions.forEach((pos, index) => {
+    positions.forEach((pos) => {
       const houseGroup = new THREE.Group();
 
       // Randomize house dimensions for variety
