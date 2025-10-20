@@ -130,6 +130,8 @@ export class Floor3dCard extends LitElement {
   private _sun: THREE.DirectionalLight;
   private _moon: THREE.DirectionalLight;
   private _moonPhase: string;
+  private _sunSphere: THREE.Mesh;
+  private _moonSphere: THREE.Mesh;
   _helper: THREE.DirectionalLightHelper;
   private _modelready: boolean;
   private _maxtextureimage: number;
@@ -1215,6 +1217,16 @@ export class Floor3dCard extends LitElement {
 
     this._sun.position.copy(sun.multiplyScalar(5000));
 
+    // Create visible sun sphere
+    const sunSphereGeometry = new THREE.SphereGeometry(300, 32, 32);
+    const sunSphereMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffff00 // Bright yellow color (self-illuminated, not affected by lighting)
+    });
+    this._sunSphere = new THREE.Mesh(sunSphereGeometry, sunSphereMaterial);
+    this._sunSphere.position.copy(this._sun.position);
+    this._sunSphere.visible = effectController.elevation > 0;
+    this._scene.add(this._sunSphere);
+
     // sun directional light parameters
     const d = 1000;
 
@@ -1310,6 +1322,15 @@ export class Floor3dCard extends LitElement {
     this._moon.shadow.camera.right = d;
     this._moon.shadow.camera.top = d;
     this._moon.shadow.camera.bottom = -d;
+
+    // Create visible moon sphere
+    const moonSphereGeometry = new THREE.SphereGeometry(250, 32, 32);
+    const moonSphereMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff // White color (self-illuminated, brightness adjusted via opacity)
+    });
+    this._moonSphere = new THREE.Mesh(moonSphereGeometry, moonSphereMaterial);
+    this._moonSphere.visible = false; // Hidden initially, shown during night
+    this._scene.add(this._moonSphere);
   }
 
   private _updateSunPosition(): void {
@@ -1341,6 +1362,11 @@ export class Floor3dCard extends LitElement {
     // Update sun position
     this._sun.position.copy(sun.clone().multiplyScalar(5000));
 
+    // Update sun sphere position
+    if (this._sunSphere) {
+      this._sunSphere.position.copy(this._sun.position);
+    }
+
     // Update sky shader
     const uniforms = this._sky.material.uniforms;
     uniforms['sunPosition'].value.copy(sun);
@@ -1349,18 +1375,48 @@ export class Floor3dCard extends LitElement {
     if (sun.y < 0 || elevation < 0) {
       // Nighttime: disable sun, enable moon
       this._sun.intensity = 0;
+
+      // Hide sun sphere
+      if (this._sunSphere) {
+        this._sunSphere.visible = false;
+      }
+
       if (this._config.day_night_cycle === 'yes' && this._moon) {
-        this._moon.intensity = this._getMoonIntensity();
+        const moonIntensity = this._getMoonIntensity();
+        this._moon.intensity = moonIntensity;
+
         // Position moon opposite to sun
         const moonVector = sun.clone().negate();
         moonVector.y = Math.abs(moonVector.y); // Keep moon above horizon
         this._moon.position.copy(moonVector.multiplyScalar(5000));
+
+        // Update moon sphere position and visibility
+        if (this._moonSphere) {
+          this._moonSphere.position.copy(this._moon.position);
+          this._moonSphere.visible = true;
+
+          // Adjust moon sphere opacity based on phase (brighter for full moon)
+          const material = this._moonSphere.material as THREE.MeshBasicMaterial;
+          material.opacity = moonIntensity;
+          material.transparent = true;
+        }
       }
     } else {
       // Daytime: enable sun, disable moon
       this._sun.intensity = 2.0;
+
+      // Show sun sphere
+      if (this._sunSphere) {
+        this._sunSphere.visible = true;
+      }
+
       if (this._config.day_night_cycle === 'yes' && this._moon) {
         this._moon.intensity = 0;
+
+        // Hide moon sphere
+        if (this._moonSphere) {
+          this._moonSphere.visible = false;
+        }
       }
     }
 
