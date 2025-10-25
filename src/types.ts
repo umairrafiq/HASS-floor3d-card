@@ -24,6 +24,9 @@ export interface Floor3dCardConfig {
   globalLightPower: string;
   hideLevelsMenu: string;
   initialLevel: number;
+  autoDetectLevels: string;
+  minLevelHeight: number;
+  levelClusterTolerance: number;
   selectionMode: string;
   editModeNotifications: string;
   shadow: string;
@@ -96,6 +99,9 @@ export interface Floor3dCardConfig {
   world_size: number;
   num_neighbor_houses: number;
   road_width: number;
+  weather_effects: string;
+  weather_entity: string;
+  weather_particle_count: number;
   x: number;
   y: number;
   z: number;

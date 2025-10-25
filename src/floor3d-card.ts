@@ -23,6 +23,8 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Sky } from 'three/examples/jsm/objects/Sky';
 import { Object3D } from 'three';
+import { WeatherEffectsManager } from './weather-effects';
+import { LevelDetector, DetectedLevel } from './level-detector';
 import '../elements/button';
 
 /* eslint no-console: 0 */
@@ -132,6 +134,10 @@ export class Floor3dCard extends LitElement {
   private _moonPhase: string;
   private _sunSphere: THREE.Mesh;
   private _moonSphere: THREE.Mesh;
+  private _weatherEffects: WeatherEffectsManager;
+  private _levelDetector: LevelDetector;
+  private _detectedLevels: DetectedLevel[];
+  private _levelsAutoDetected: boolean = false;
   _helper: THREE.DirectionalLightHelper;
   private _modelready: boolean;
   private _maxtextureimage: number;
@@ -1119,6 +1125,14 @@ export class Floor3dCard extends LitElement {
               this._updateSunPosition();
             }
           }
+
+          // Update weather effects if weather entity exists
+          if (this._config.weather_effects === 'yes' && this._weatherEffects) {
+            const weatherEntity = this._config.weather_entity || 'weather.home';
+            if (hass.states[weatherEntity]) {
+              this._updateWeatherEffects();
+            }
+          }
         }
       }
     } catch (e) {
@@ -1250,6 +1264,11 @@ export class Floor3dCard extends LitElement {
     // Initialize moon if day/night cycle is enabled
     if (this._config.day_night_cycle === 'yes') {
       this._initMoon();
+    }
+
+    // Initialize weather effects if enabled
+    if (this._config.weather_effects === 'yes') {
+      this._initWeatherEffects();
     }
   }
 
@@ -1422,6 +1441,45 @@ export class Floor3dCard extends LitElement {
 
     // Mark shadow map for update
     this._renderer.shadowMap.needsUpdate = true;
+  }
+
+  private _initWeatherEffects(): void {
+    console.log('Init Weather Effects');
+
+    if (!this._clock) {
+      this._clock = new THREE.Clock();
+    }
+
+    const particleCount = this._config.weather_particle_count || 2000;
+
+    this._weatherEffects = new WeatherEffectsManager(
+      this._scene,
+      this._clock,
+      this._sky,
+      {
+        enabled: true,
+        particleCount: particleCount,
+      }
+    );
+
+    // Initial weather update if weather entity exists
+    const weatherEntity = this._config.weather_entity || 'weather.home';
+    if (this._hass.states[weatherEntity]) {
+      const condition = this._hass.states[weatherEntity].state;
+      const attributes = this._hass.states[weatherEntity].attributes;
+      this._weatherEffects.updateWeather(condition, attributes);
+    }
+  }
+
+  private _updateWeatherEffects(): void {
+    if (!this._weatherEffects) return;
+
+    const weatherEntity = this._config.weather_entity || 'weather.home';
+    if (this._hass.states[weatherEntity]) {
+      const condition = this._hass.states[weatherEntity].state;
+      const attributes = this._hass.states[weatherEntity].attributes;
+      this._weatherEffects.updateWeather(condition, attributes);
+    }
   }
 
   private _initAmbient(): void {
@@ -1876,8 +1934,85 @@ export class Floor3dCard extends LitElement {
     }
   }
 
+  private _autoDetectLevels(object: THREE.Object3D): void {
+    // Initialize level detector with configuration
+    const config = {
+      minLevelHeight: this._config.minLevelHeight || 2.0,
+      clusterTolerance: this._config.levelClusterTolerance || 0.5,
+      ignoreSmallObjects: true,
+      minObjectSize: 0.1,
+    };
+
+    this._levelDetector = new LevelDetector(config);
+
+    // Auto-detect levels (will try to load from storage first)
+    this._detectedLevels = this._levelDetector.autoDetectAndApply(object, false);
+
+    if (this._detectedLevels.length > 0) {
+      console.log('Auto-detected levels:', this._detectedLevels.length);
+      this._levelsAutoDetected = true;
+
+      // Rebuild levels structure based on auto-detection
+      this._levels = [];
+      this._raycastinglevels = [];
+
+      // Create level groups
+      this._detectedLevels.forEach(detectedLevel => {
+        const levelNum = detectedLevel.level;
+        this._levels[levelNum] = new THREE.Object3D();
+        this._raycastinglevels[levelNum] = [];
+        console.log(`Auto-detected level ${levelNum}: ${detectedLevel.objectCount} objects`);
+      });
+
+      // Add objects to their detected levels
+      object.traverse((element) => {
+        if (element.userData?.autoDetected && element.userData?.level !== undefined) {
+          const levelNum = element.userData.level;
+          if (this._levels[levelNum]) {
+            this._levels[levelNum].add(element);
+          }
+        }
+      });
+    } else {
+      console.warn('Auto-detection found no levels, using default level 0');
+      this._levelsAutoDetected = false;
+    }
+  }
+
+  private _regenerateLevels(): void {
+    if (!this._bboxmodel) {
+      console.error('Cannot regenerate levels: model not loaded');
+      return;
+    }
+
+    console.log('Regenerating level detection...');
+
+    // Clear stored mapping
+    if (this._levelDetector) {
+      this._levelDetector.clearStorage(this._bboxmodel);
+    }
+
+    // Re-run auto-detection with force flag
+    const config = {
+      minLevelHeight: this._config.minLevelHeight || 2.0,
+      clusterTolerance: this._config.levelClusterTolerance || 0.5,
+      ignoreSmallObjects: true,
+      minObjectSize: 0.1,
+    };
+
+    this._levelDetector = new LevelDetector(config);
+    this._detectedLevels = this._levelDetector.autoDetectAndApply(this._bboxmodel, true);
+
+    // Show statistics
+    const stats = this._levelDetector.getLevelStatistics(this._detectedLevels);
+    console.log('Level detection complete:\n' + stats);
+
+    // Trigger a full rerender to rebuild the scene
+    this.rerender();
+  }
+
   private _initobjects(object: THREE.Object3D) {
-    console.log('Ïnit Objects, Levels and Raycasting');
+    console.log('Init Objects, Levels and Raycasting');
 
     let level = 0;
     this._levels = [];
@@ -1893,17 +2028,20 @@ export class Floor3dCard extends LitElement {
     const regex = /lvl(?<level>\d{3})/;
 
     let imported_objects: THREE.Object3D[] = [];
+    let manualLevelsFound = 0;
 
     object.traverse((element) => {
       imported_objects.push(element);
     });
 
+    // First pass: try manual level detection via naming
     imported_objects.forEach((element) => {
       let found;
 
       found = element.name.match(regex);
 
       if (found) {
+        manualLevelsFound++;
         if (!this._levels[Number(found.groups?.level)]) {
           console.log('Found level ' + found.groups?.level);
           this._levels[Number(found.groups?.level)] = new THREE.Object3D();
@@ -1919,6 +2057,24 @@ export class Floor3dCard extends LitElement {
         this._levels[0].add(element);
         level = 0;
       }
+    });
+
+    // Auto-detect levels if enabled and no manual levels found
+    const autoDetectEnabled = this._config.autoDetectLevels === 'yes';
+    const shouldAutoDetect = autoDetectEnabled && (manualLevelsFound === 0 || this._levels.length <= 1);
+
+    if (shouldAutoDetect) {
+      console.log('Manual levels not found or insufficient, attempting auto-detection...');
+      this._autoDetectLevels(object);
+    } else if (manualLevelsFound > 0) {
+      console.log(`Using ${manualLevelsFound} manually named levels`);
+      this._levelsAutoDetected = false;
+    }
+
+    // Continue with the rest of the original logic
+    imported_objects.forEach((element) => {
+      // Get the level from userData (set by either manual or auto-detection)
+      level = element.userData?.level || 0;
 
       element.receiveShadow = true;
 
@@ -2068,13 +2224,38 @@ export class Floor3dCard extends LitElement {
   private _getLevelBar(): TemplateResult {
     if (this._levels) {
       if (this._levels.length > 1 && (this._config.hideLevelsMenu == null || this._config.hideLevelsMenu == 'no')) {
-        return html` <div class="category" style="opacity: 0.5; position: absolute">${this._getLevelIcons()}</div> `;
+        return html` <div class="category" style="opacity: 0.5; position: absolute">
+          ${this._getLevelIcons()}
+          ${this._levelsAutoDetected ? this._getRegenerateLevelsButton() : html``}
+        </div> `;
       } else {
         return html``;
       }
     } else {
       return html``;
     }
+  }
+
+  private _getRegenerateLevelsButton(): TemplateResult {
+    return html`
+      <div class="row" style="background-color:#444;">
+        <font color="white">
+          <ha-icon
+            .icon=${'mdi:refresh'}
+            style="opacity: 100%;"
+            class="ha-icon-large"
+            title="Regenerate levels (auto-detected)"
+            @click=${this._handleRegenerateLevelsClick.bind(this)}
+          >
+          </ha-icon>
+        </font>
+      </div>
+    `;
+  }
+
+  private _handleRegenerateLevelsClick(): void {
+    console.log('Regenerate levels button clicked');
+    this._regenerateLevels();
   }
 
   private _getLevelIcons(): TemplateResult[] {
@@ -3585,6 +3766,11 @@ export class Floor3dCard extends LitElement {
     });
 
     TWEEN.update();
+
+    // Update weather effects if enabled
+    if (this._weatherEffects) {
+      this._weatherEffects.update();
+    }
 
     this._renderer.shadowMap.needsUpdate = true;
     this._renderer.render(this._scene, this._camera);
