@@ -137,7 +137,7 @@ export class Floor3dCard extends LitElement {
   private _weatherEffects: WeatherEffectsManager;
   private _levelDetector: LevelDetector;
   private _detectedLevels: DetectedLevel[];
-  private _levelsAutoDetected: boolean = false;
+  private _levelsAutoDetected = false;
   _helper: THREE.DirectionalLightHelper;
   private _modelready: boolean;
   private _maxtextureimage: number;
@@ -1128,7 +1128,7 @@ export class Floor3dCard extends LitElement {
 
           // Update weather effects if weather entity exists
           if (this._config.weather_effects === 'yes' && this._weatherEffects) {
-            const weatherEntity = this._config.weather_entity || 'weather.home';
+            const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
             if (hass.states[weatherEntity]) {
               this._updateWeatherEffects();
             }
@@ -1463,7 +1463,7 @@ export class Floor3dCard extends LitElement {
     );
 
     // Initial weather update if weather entity exists
-    const weatherEntity = this._config.weather_entity || 'weather.home';
+    const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
     if (this._hass.states[weatherEntity]) {
       const condition = this._hass.states[weatherEntity].state;
       const attributes = this._hass.states[weatherEntity].attributes;
@@ -1474,7 +1474,7 @@ export class Floor3dCard extends LitElement {
   private _updateWeatherEffects(): void {
     if (!this._weatherEffects) return;
 
-    const weatherEntity = this._config.weather_entity || 'weather.home';
+    const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
     if (this._hass.states[weatherEntity]) {
       const condition = this._hass.states[weatherEntity].state;
       const attributes = this._hass.states[weatherEntity].attributes;

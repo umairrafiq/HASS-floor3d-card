@@ -23,7 +23,19 @@ The system uses a simple but effective clustering algorithm:
 
 ## Configuration
 
-### Enable Auto-Detection
+### Visual Editor
+
+All level detection settings are now available in the visual card editor under the **Appearance** section:
+
+1. **Hide Levels Menu** - Hide/show the levels menu (yes/no)
+2. **Auto Detect Levels** - Enable automatic level detection (yes/no)
+3. **Initial Level** - Which level to display on startup (number, default: 0)
+4. **Min Level Height** - Minimum vertical distance between levels in meters (default: 2.0)
+5. **Level Cluster Tolerance** - Tolerance for grouping objects within a level (default: 0.5)
+
+No need to manually edit YAML - configure everything visually!
+
+### Enable Auto-Detection (YAML)
 
 ```yaml
 type: custom:floor3d-card
@@ -31,6 +43,7 @@ type: custom:floor3d-card
 autoDetectLevels: 'yes'        # Enable auto-detection
 minLevelHeight: 2.0            # Minimum height between levels (meters)
 levelClusterTolerance: 0.5     # Tolerance for grouping objects
+initialLevel: 0                # Start on ground floor
 ```
 
 ### Configuration Parameters
@@ -38,8 +51,10 @@ levelClusterTolerance: 0.5     # Tolerance for grouping objects
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `autoDetectLevels` | string | `'no'` | Set to `'yes'` to enable automatic level detection |
+| `initialLevel` | number | `0` | Which level to display on startup (0 = ground floor) |
 | `minLevelHeight` | number | `2.0` | Minimum vertical distance between levels (in meters) |
 | `levelClusterTolerance` | number | `0.5` | Tolerance for grouping objects within a level |
+| `hideLevelsMenu` | string | `'no'` | Set to `'yes'` to hide the levels menu UI |
 
 ### When Auto-Detection Activates
 
@@ -90,6 +105,7 @@ type: custom:floor3d-card
 path: /local/floor3d/
 objfile: house.glb
 autoDetectLevels: 'yes'
+initialLevel: 0  # Start on ground floor
 ```
 
 ### Custom Detection Parameters

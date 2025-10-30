@@ -31,7 +31,7 @@ type: custom:floor3d-card
 # ... your existing configuration ...
 sky: 'yes'  # Required for weather effects
 weather_effects: 'yes'  # Enable weather visualization
-weather_entity: 'weather.home'  # Optional, defaults to 'weather.home'
+weather_entity: 'weather.forecast_home'  # Optional, defaults to 'weather.forecast_home'
 weather_particle_count: 2000  # Optional, default is 2000
 ```
 
@@ -40,14 +40,23 @@ weather_particle_count: 2000  # Optional, default is 2000
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `weather_effects` | string | - | Set to `'yes'` to enable weather effects |
-| `weather_entity` | string | `'weather.home'` | Home Assistant weather entity to use |
+| `weather_entity` | string | `'weather.forecast_home'` | Home Assistant weather entity to use |
 | `weather_particle_count` | number | `2000` | Number of particles for rain/snow (affects performance) |
 
 ### Requirements
 
 1. **Sky mode must be enabled**: `sky: 'yes'`
-2. **Valid weather entity**: Must have a Home Assistant weather integration
+2. **Valid weather entity**: Must have a Home Assistant weather integration (e.g., [Met.no](https://www.home-assistant.io/integrations/met))
 3. **Animation mode**: Works best with animated objects (triggers animation loop)
+
+### Editor Configuration
+
+All weather settings can now be configured directly in the visual card editor:
+- **Weather Effects** toggle (yes/no)
+- **Weather Entity** field (defaults to `weather.forecast_home`)
+- **Weather Particle Count** slider (performance tuning)
+
+No need to manually edit YAML - just use the editor UI!
 
 ## Supported Weather Conditions
 
@@ -162,7 +171,7 @@ sky: 'yes'
 shadow: 'yes'
 day_night_cycle: 'yes'
 weather_effects: 'yes'
-weather_entity: 'weather.forecast_home'
+weather_entity: 'weather.forecast_home'  # Or any weather integration entity
 weather_particle_count: 3000
 north:
   x: 0

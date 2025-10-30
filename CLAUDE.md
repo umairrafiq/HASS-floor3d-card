@@ -150,6 +150,49 @@ The editor and helpers ensure:
 - Object group references are valid
 - Required parameters for each type3d are present
 
+## Visual Editor Features
+
+The visual card editor (`src/editor.ts`) provides a comprehensive UI for configuring all card features without editing YAML:
+
+### Appearance & Lighting
+- Global Light Power (0-1 slider)
+- Shadow toggle (yes/no)
+- Extra Light Mode toggle (performance vs quality)
+- Show Axes toggle (debug visualization)
+- Background color picker
+
+### Sky & Weather
+- **Sky** toggle - Enable sky dome with real sun position
+- **Day/Night Cycle** toggle - Enable moon lighting at night
+- **Moon Entity** field - Configure moon phase sensor (default: `sensor.moon`)
+- **Weather Effects** toggle - Enable 3D weather visualization
+- **Weather Entity** field - Configure weather integration (default: `weather.forecast_home`)
+- **Weather Particle Count** - Performance tuning (default: 2000)
+- **North Direction** - Set house orientation for correct shadows (e.g., `{x: 0, z: 1}`)
+
+### Level Detection
+- **Hide Levels Menu** toggle - Show/hide level navigation UI
+- **Auto Detect Levels** toggle - Enable automatic floor detection
+- **Initial Level** - Which level to display on startup (default: 0)
+- **Min Level Height** - Minimum vertical distance between levels in meters (default: 2.0)
+- **Level Cluster Tolerance** - Tolerance for grouping objects (default: 0.5)
+
+### Low Poly World
+- **Low Poly World** toggle - Enable neighborhood environment
+- **World Size** - Size of generated world (default: 2000)
+- **Number of Neighbor Houses** - How many houses to generate (default: 8)
+- **Road Width** - Width of roads (default: 200)
+
+### Entity & Object Configuration
+- Entity selection dropdowns (auto-populated from Home Assistant)
+- Object ID selection (auto-populated from loaded 3D model)
+- Type3d selection with context-specific options
+- Object groups management
+- Zoom areas configuration
+
+### Preview
+The editor includes live preview functionality - all changes are immediately visible in the preview pane without saving.
+
 ## Low Poly World
 
 ### Low Poly World (`low_poly_world: 'yes'`)

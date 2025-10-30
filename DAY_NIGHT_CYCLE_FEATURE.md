@@ -97,16 +97,21 @@ north:
 - `sun.sun` entity - Provides sun position (azimuth/elevation)
 
 ### Optional (For Moon Phases)
-- Moon integration - Install from HACS or Home Assistant integrations
+- [Moon integration](https://www.home-assistant.io/integrations/moon/) - Install from Home Assistant integrations
 - Creates `sensor.moon` entity with current moon phase
 - **If not installed:** Feature still works, moon will use default intensity (0.3)
 
 ## Visual Editor
 
-The visual editor now includes two new options under the **Appearance** section:
+The visual editor now includes all day/night cycle options under the **Appearance** section:
 
-1. **Day/Night Cycle** - Toggle between yes/no
-2. **Moon Entity** - Specify custom moon entity (defaults to sensor.moon)
+1. **Sky** - Enable sky dome (yes/no)
+2. **Shadow** - Enable shadows (yes/no)
+3. **Day/Night Cycle** - Enable moon lighting at night (yes/no)
+4. **Moon Entity** - Specify custom moon entity (defaults to `sensor.moon`)
+5. **North Direction** - Set house orientation (e.g., `{x: 0, z: 1}`)
+
+All features can be configured visually without editing YAML!
 
 ## How It Works
 

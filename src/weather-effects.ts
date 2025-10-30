@@ -317,8 +317,8 @@ class CloudEffect {
 class LightningEffect {
   private lightningLight: THREE.PointLight;
   private scene: THREE.Scene;
-  private active: boolean = false;
-  private lastFlash: number = 0;
+  private active = false;
+  private lastFlash = 0;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -381,7 +381,7 @@ export class WeatherEffectsManager {
   private lightningEffect: LightningEffect;
   private currentCondition: WeatherCondition | null = null;
   private config: WeatherEffectsConfig;
-  private windSpeed: number = 0;
+  private windSpeed = 0;
 
   constructor(scene: THREE.Scene, clock: THREE.Clock, sky?: any, config?: WeatherEffectsConfig) {
     this.scene = scene;
