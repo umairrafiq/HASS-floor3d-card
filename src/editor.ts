@@ -12,6 +12,7 @@ import {
 } from './helpers';
 import { loadHaComponents } from './ensureComponents';
 import { Floor3dCardConfig } from './types';
+import { CARD_VERSION } from './const';
 import '../elements/formfield';
 import '../elements/select';
 import '../elements/textfield';
@@ -351,6 +352,9 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
   protected render(): TemplateResult | void {
     const show = this._config.overlay ? this._config.overlay == 'yes' : false;
     return html`
+      <div class="version-header" style="padding: 8px; background-color: var(--primary-color); color: var(--text-primary-color); font-size: 12px; font-weight: 500; text-align: center; border-radius: 4px; margin-bottom: 16px;">
+        Floor3D Card Editor v${CARD_VERSION}
+      </div>
       <div class="sub-category" style="display: flex; flex-direction: row; align-items: left;">
         <ha-icon @click=${this._config_changed} icon="mdi:refresh" class="ha-icon-large"> </ha-icon>
       </div>
