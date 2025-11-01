@@ -55,12 +55,12 @@ class RainEffect {
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly rain drop geometry (elongated cylinder)
-    const geometry = new THREE.CylinderGeometry(0.1, 0.1, 2, 3);
+    // Create low-poly rain drop geometry (elongated cylinder) - scaled up 10x for visibility
+    const geometry = new THREE.CylinderGeometry(1, 1, 20, 3);
     const material = new THREE.MeshBasicMaterial({
       color: 0x8888aa,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.6,
     });
 
     // Create instanced mesh (single draw call for all raindrops)
@@ -91,15 +91,15 @@ class RainEffect {
       particle.y -= particle.speed * 0.016; // Approximate 60fps delta
       particle.x += windSpeed * 0.5;
 
-      // Reset when hitting ground (relative to camera height)
-      if (particle.y < camY - 500) {
-        particle.y = camY + 500;
+      // Reset when hitting ground (below camera)
+      if (particle.y < -500) {
+        particle.y = 500;
         particle.x = (Math.random() - 0.5) * 1000;
         particle.z = (Math.random() - 0.5) * 1000;
       }
 
-      // Update instance matrix (position relative to camera)
-      this.dummy.position.set(camX + particle.x, particle.y, camZ + particle.z);
+      // Update instance matrix (position relative to camera) - Y also offset by camera now!
+      this.dummy.position.set(camX + particle.x, camY + particle.y, camZ + particle.z);
       this.dummy.rotation.z = Math.atan2(windSpeed, particle.speed); // Angle based on wind
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
@@ -147,12 +147,12 @@ class SnowEffect {
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly snowflake geometry (simple octahedron or icosahedron)
-    const geometry = new THREE.OctahedronGeometry(0.5, 0);
+    // Create low-poly snowflake geometry (simple octahedron) - scaled up 10x for visibility
+    const geometry = new THREE.OctahedronGeometry(5, 0);
     const material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,
     });
 
     // Create instanced mesh (single draw call for all snowflakes)
@@ -186,15 +186,15 @@ class SnowEffect {
       // Sinusoidal drift for realistic floating motion
       particle.x += Math.sin(elapsedTime + i) * particle.drift! + windSpeed * 0.3;
 
-      // Reset when hitting ground (relative to camera height)
-      if (particle.y < camY - 500) {
-        particle.y = camY + 500;
+      // Reset when hitting ground (below camera)
+      if (particle.y < -500) {
+        particle.y = 500;
         particle.x = (Math.random() - 0.5) * 1000;
         particle.z = (Math.random() - 0.5) * 1000;
       }
 
-      // Update instance matrix with tumbling rotation (position relative to camera)
-      this.dummy.position.set(camX + particle.x, particle.y, camZ + particle.z);
+      // Update instance matrix with tumbling rotation (position relative to camera) - Y also offset!
+      this.dummy.position.set(camX + particle.x, camY + particle.y, camZ + particle.z);
       // Time-based tumbling rotation for natural snowflake movement
       this.dummy.rotation.x = elapsedTime * 2 + i;
       this.dummy.rotation.y = elapsedTime * 3 + i;
@@ -244,12 +244,12 @@ class CloudEffect {
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly cloud geometry (low-res sphere)
-    const geometry = new THREE.SphereGeometry(30, 6, 6);
+    // Create low-poly cloud geometry (low-res sphere) - scaled up for visibility
+    const geometry = new THREE.SphereGeometry(80, 6, 6);
     const material = new THREE.MeshLambertMaterial({
-      color: 0xffffff,
+      color: 0xdddddd,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.7,
     });
 
     // Create instanced mesh
@@ -257,11 +257,11 @@ class CloudEffect {
     this.mesh.visible = false;
     this.scene.add(this.mesh);
 
-    // Initialize cloud particles at high altitude
+    // Initialize cloud particles at high altitude (relative to camera)
     for (let i = 0; i < particleCount; i++) {
       this.particles.push({
         x: (Math.random() - 0.5) * 2000,
-        y: 250 + Math.random() * 150,
+        y: 100 + Math.random() * 200, // Offset from camera (100-300 units above)
         z: (Math.random() - 0.5) * 2000,
         speed: 0.5 + Math.random() * 1,
       });
