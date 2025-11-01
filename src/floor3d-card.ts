@@ -2070,41 +2070,51 @@ export class Floor3dCard extends LitElement {
       imported_objects.push(element);
     });
 
-    // First pass: try manual level detection via naming
+    // Count manual levels first (without modifying the hierarchy)
     imported_objects.forEach((element) => {
-      let found;
-
-      found = element.name.match(regex);
-
+      const found = element.name.match(regex);
       if (found) {
         manualLevelsFound++;
-        if (!this._levels[Number(found.groups?.level)]) {
-          console.log('Found level ' + found.groups?.level);
-          this._levels[Number(found.groups?.level)] = new THREE.Object3D();
-          this._raycastinglevels[Number(found.groups?.level)] = [];
-        }
-
-        element.userData = { level: Number(found.groups?.level) };
-        element.name = element.name.slice(6);
-        this._levels[Number(found.groups?.level)].add(element);
-        level = Number(found.groups?.level);
-      } else {
-        element.userData = { level: 0 };
-        this._levels[0].add(element);
-        level = 0;
       }
     });
 
-    // Auto-detect levels if enabled and no manual levels found
+    // Decide if we should use auto-detection BEFORE moving any objects
     const autoDetectEnabled = this._config.autoDetectLevels === 'yes';
     const shouldAutoDetect = autoDetectEnabled && (manualLevelsFound === 0 || this._levels.length <= 1);
 
     if (shouldAutoDetect) {
       console.log('Manual levels not found or insufficient, attempting auto-detection...');
+      // Call auto-detect BEFORE moving objects (object hierarchy is still intact)
       this._autoDetectLevels(object);
-    } else if (manualLevelsFound > 0) {
-      console.log(`Using ${manualLevelsFound} manually named levels`);
-      this._levelsAutoDetected = false;
+    } else {
+      // Manual level assignment: try manual level detection via naming
+      imported_objects.forEach((element) => {
+        let found;
+
+        found = element.name.match(regex);
+
+        if (found) {
+          if (!this._levels[Number(found.groups?.level)]) {
+            console.log('Found level ' + found.groups?.level);
+            this._levels[Number(found.groups?.level)] = new THREE.Object3D();
+            this._raycastinglevels[Number(found.groups?.level)] = [];
+          }
+
+          element.userData = { level: Number(found.groups?.level) };
+          element.name = element.name.slice(6);
+          this._levels[Number(found.groups?.level)].add(element);
+          level = Number(found.groups?.level);
+        } else {
+          element.userData = { level: 0 };
+          this._levels[0].add(element);
+          level = 0;
+        }
+      });
+
+      if (manualLevelsFound > 0) {
+        console.log(`Using ${manualLevelsFound} manually named levels`);
+        this._levelsAutoDetected = false;
+      }
     }
 
     // Continue with the rest of the original logic
