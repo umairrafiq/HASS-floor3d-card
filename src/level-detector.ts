@@ -126,10 +126,22 @@ export class LevelDetector {
 
     const objectHeights: Map<string, { min: number; max: number; midpoint: number }> = new Map();
     const allMidpoints: number[] = [];
+    const objectTypeCounts: Map<string, number> = new Map();
+    let namedObjectCount = 0;
+    let validHeightObjectCount = 0;
 
     // Collect height information for all objects
     rootObject.traverse((object) => {
-      if (object.name && object.type === 'Mesh' || object.type === 'Group') {
+      // Track object types for diagnostics
+      const count = objectTypeCounts.get(object.type) || 0;
+      objectTypeCounts.set(object.type, count + 1);
+
+      if (object.name) {
+        namedObjectCount++;
+      }
+
+      // Fixed operator precedence - must have name AND be Mesh or Group
+      if (object.name && (object.type === 'Mesh' || object.type === 'Group')) {
         const heightRange = this.getObjectHeightRange(object);
 
         if (heightRange) {
@@ -142,11 +154,16 @@ export class LevelDetector {
           });
 
           allMidpoints.push(midpoint);
+          validHeightObjectCount++;
         }
       }
     });
 
-    console.log(`Analyzed ${objectHeights.size} objects for level detection`);
+    console.log(`Level detection diagnostics:
+      - Total objects traversed by type: ${JSON.stringify(Object.fromEntries(objectTypeCounts))}
+      - Named objects: ${namedObjectCount}
+      - Objects with valid heights: ${validHeightObjectCount}
+      - Objects analyzed: ${objectHeights.size}`);
 
     if (allMidpoints.length === 0) {
       console.warn('No suitable objects found for level detection');
