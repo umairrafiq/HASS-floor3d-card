@@ -3815,7 +3815,7 @@ export class Floor3dCard extends LitElement {
 
     // Update weather effects if enabled
     if (this._weatherEffects) {
-      this._weatherEffects.update();
+      this._weatherEffects.update(this._camera.position);
     }
 
     this._renderer.shadowMap.needsUpdate = true;

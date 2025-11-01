@@ -79,23 +79,27 @@ class RainEffect {
     }
   }
 
-  update(windSpeed = 0): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
     if (!this.mesh.visible) return;
+
+    const camX = cameraPosition?.x || 0;
+    const camY = cameraPosition?.y || 0;
+    const camZ = cameraPosition?.z || 0;
 
     this.particles.forEach((particle, i) => {
       // Rain falls straight down with some wind drift
       particle.y -= particle.speed * 0.016; // Approximate 60fps delta
       particle.x += windSpeed * 0.5;
 
-      // Reset when hitting ground
-      if (particle.y < -5) {
-        particle.y = 500;
+      // Reset when hitting ground (relative to camera height)
+      if (particle.y < camY - 500) {
+        particle.y = camY + 500;
         particle.x = (Math.random() - 0.5) * 1000;
         particle.z = (Math.random() - 0.5) * 1000;
       }
 
-      // Update instance matrix
-      this.dummy.position.set(particle.x, particle.y, particle.z);
+      // Update instance matrix (position relative to camera)
+      this.dummy.position.set(camX + particle.x, particle.y, camZ + particle.z);
       this.dummy.rotation.z = Math.atan2(windSpeed, particle.speed); // Angle based on wind
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
@@ -168,9 +172,12 @@ class SnowEffect {
     }
   }
 
-  update(windSpeed = 0): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
     if (!this.mesh.visible) return;
 
+    const camX = cameraPosition?.x || 0;
+    const camY = cameraPosition?.y || 0;
+    const camZ = cameraPosition?.z || 0;
     const elapsedTime = this.clock.getElapsedTime();
 
     this.particles.forEach((particle, i) => {
@@ -179,15 +186,15 @@ class SnowEffect {
       // Sinusoidal drift for realistic floating motion
       particle.x += Math.sin(elapsedTime + i) * particle.drift! + windSpeed * 0.3;
 
-      // Reset when hitting ground
-      if (particle.y < -5) {
-        particle.y = 500;
+      // Reset when hitting ground (relative to camera height)
+      if (particle.y < camY - 500) {
+        particle.y = camY + 500;
         particle.x = (Math.random() - 0.5) * 1000;
         particle.z = (Math.random() - 0.5) * 1000;
       }
 
-      // Update instance matrix with tumbling rotation
-      this.dummy.position.set(particle.x, particle.y, particle.z);
+      // Update instance matrix with tumbling rotation (position relative to camera)
+      this.dummy.position.set(camX + particle.x, particle.y, camZ + particle.z);
       // Time-based tumbling rotation for natural snowflake movement
       this.dummy.rotation.x = elapsedTime * 2 + i;
       this.dummy.rotation.y = elapsedTime * 3 + i;
@@ -261,9 +268,12 @@ class CloudEffect {
     }
   }
 
-  update(windSpeed = 0): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
     if (!this.mesh.visible) return;
 
+    const camX = cameraPosition?.x || 0;
+    const camY = cameraPosition?.y || 0;
+    const camZ = cameraPosition?.z || 0;
     const elapsedTime = this.clock.getElapsedTime();
 
     this.particles.forEach((particle, i) => {
@@ -278,8 +288,8 @@ class CloudEffect {
       // Gentle bobbing motion
       const bobbing = Math.sin(elapsedTime * 0.5 + i) * 0.5;
 
-      // Update instance matrix
-      this.dummy.position.set(particle.x, particle.y + bobbing, particle.z);
+      // Update instance matrix (position relative to camera)
+      this.dummy.position.set(camX + particle.x, camY + particle.y + bobbing, camZ + particle.z);
       this.dummy.scale.set(1 + Math.sin(i) * 0.3, 0.8, 1 + Math.cos(i) * 0.3);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
@@ -330,17 +340,22 @@ class LightningEffect {
     this.scene.add(this.lightningLight);
   }
 
-  update(): void {
+  update(cameraPosition?: THREE.Vector3): void {
     const now = Date.now();
+
+    const camX = cameraPosition?.x || 0;
+    const camY = cameraPosition?.y || 0;
+    const camZ = cameraPosition?.z || 0;
 
     // Random lightning flash (0.3% chance per frame when not active)
     if (!this.active && Math.random() < 0.003 && now - this.lastFlash > 2000) {
       this.active = true;
       this.lastFlash = now;
 
-      // Random position for each flash
-      this.lightningLight.position.x = (Math.random() - 0.5) * 200;
-      this.lightningLight.position.z = (Math.random() - 0.5) * 200;
+      // Random position for each flash (relative to camera)
+      this.lightningLight.position.x = camX + (Math.random() - 0.5) * 200;
+      this.lightningLight.position.y = camY + 200;
+      this.lightningLight.position.z = camZ + (Math.random() - 0.5) * 200;
 
       // Bright flash
       this.lightningLight.intensity = 90;
@@ -575,13 +590,13 @@ export class WeatherEffectsManager {
    * Update animation for all active effects
    * Call this in your animation loop
    */
-  update(): void {
+  update(cameraPosition?: THREE.Vector3): void {
     if (!this.config.enabled) return;
 
-    this.rainEffect.update(this.windSpeed);
-    this.snowEffect.update(this.windSpeed);
-    this.cloudEffect.update(this.windSpeed);
-    this.lightningEffect.update();
+    this.rainEffect.update(this.windSpeed, cameraPosition);
+    this.snowEffect.update(this.windSpeed, cameraPosition);
+    this.cloudEffect.update(this.windSpeed, cameraPosition);
+    this.lightningEffect.update(cameraPosition);
   }
 
   /**
