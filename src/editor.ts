@@ -1109,30 +1109,27 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                     <mwc-list-item value="yes">yes</mwc-list-item>
                     <mwc-list-item value="no">no</mwc-list-item>
                 </floor3d-select>
-                <paper-input
-                  editable
+                <floor3d-textfield
                   label="Initial Level (default: 0)"
                   .value=${config.initialLevel !== undefined ? config.initialLevel : '0'}
                   .configObject=${config}
                   .configAttribute=${'initialLevel'}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Min Level Height (default: 2.0 meters)"
                   .value=${config.minLevelHeight ? config.minLevelHeight : '2.0'}
                   .configObject=${config}
                   .configAttribute=${'minLevelHeight'}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Level Cluster Tolerance (default: 0.5)"
                   .value=${config.levelClusterTolerance ? config.levelClusterTolerance : '0.5'}
                   .configObject=${config}
                   .configAttribute=${'levelClusterTolerance'}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <floor3d-formfield alignEnd label="Global Scene Light (0..1)" >
                   <floor3d-textfield
                     type="number"
@@ -1269,22 +1266,20 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                     <mwc-list-item value="yes">yes</mwc-list-item>
                     <mwc-list-item value="no">no</mwc-list-item>
                 </floor3d-select>
-                <paper-input
-                  editable
+                <floor3d-textfield
                   label="Weather Entity (default: weather.forecast_home)"
                   .value=${config.weather_entity ? config.weather_entity : 'weather.forecast_home'}
                   .configObject=${config}
                   .configAttribute=${'weather_entity'}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Weather Particle Count (default: 2000)"
                   .value=${config.weather_particle_count ? config.weather_particle_count : '2000'}
                   .configObject=${config}
                   .configAttribute=${'weather_particle_count'}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"

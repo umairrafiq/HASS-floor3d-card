@@ -62,7 +62,7 @@ const ut=t=>e=>"function"==typeof e?((t,e)=>(customElements.define(t,e),e))(t,e)
  * Copyright 2021 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-var xt;const yt=null!=(null===(xt=window.HTMLSlotElement)||void 0===xt?void 0:xt.prototype.assignedElements)?(t,e)=>t.assignedElements(e):(t,e)=>t.assignedNodes(e).filter(t=>t.nodeType===Node.ELEMENT_NODE);var bt,wt;!function(t){t.language="language",t.system="system",t.comma_decimal="comma_decimal",t.decimal_comma="decimal_comma",t.space_comma="space_comma",t.none="none"}(bt||(bt={})),function(t){t.language="language",t.system="system",t.am_pm="12",t.twenty_four="24"}(wt||(wt={}));var Mt=["closed","locked","off"],Et=function(t,e,i,n){n=n||{},i=null==i?{}:i;var r=new Event(e,{bubbles:void 0===n.bubbles||n.bubbles,cancelable:Boolean(n.cancelable),composed:void 0===n.composed||n.composed});return r.detail=i,t.dispatchEvent(r),r},St=function(t){Et(window,"haptic",t)},Tt=function(t,e,i,n){if(n||(n={action:"more-info"}),!n.confirmation||n.confirmation.exemptions&&n.confirmation.exemptions.some(function(t){return t.user===e.user.id})||(St("warning"),confirm(n.confirmation.text||"Are you sure you want to "+n.action+"?")))switch(n.action){case"more-info":(i.entity||i.camera_image)&&Et(t,"hass-more-info",{entityId:i.entity?i.entity:i.camera_image});break;case"navigate":n.navigation_path&&function(t,e,i){void 0===i&&(i=!1),i?history.replaceState(null,"",e):history.pushState(null,"",e),Et(window,"location-changed",{replace:i})}(0,n.navigation_path);break;case"url":n.url_path&&window.open(n.url_path);break;case"toggle":i.entity&&(function(t,e){(function(t,e,i){void 0===i&&(i=!0);var n,r=function(t){return t.substr(0,t.indexOf("."))}(e),o="group"===r?"homeassistant":r;switch(r){case"lock":n=i?"unlock":"lock";break;case"cover":n=i?"open_cover":"close_cover";break;default:n=i?"turn_on":"turn_off"}t.callService(o,n,{entity_id:e})})(t,e,Mt.includes(t.states[e].state))}(e,i.entity),St("success"));break;case"call-service":if(!n.service)return void St("failure");var r=n.service.split(".",2);e.callService(r[0],r[1],n.service_data,n.target),St("success");break;case"fire-dom-event":Et(t,"ll-custom",n)}};function At(...t){const e=t=>t&&"object"==typeof t;return t.reduce((t,i)=>(Object.keys(i).forEach(n=>{const r=t[n],o=i[n];Array.isArray(r)&&Array.isArray(o)?t[n]=r.concat(...o):e(r)&&e(o)?t[n]=At(r,o):t[n]=o}),t),{})}const Lt=()=>{let t=document.querySelector("home-assistant");if(t=t&&t.shadowRoot,t=t&&t.querySelector("home-assistant-main"),t=t&&t.shadowRoot,t=t&&t.querySelector("app-drawer-layout partial-panel-resolver, ha-drawer partial-panel-resolver"),t=t&&t.shadowRoot||t,t=t&&t.querySelector("ha-panel-lovelace"),t=t&&t.shadowRoot,t=t&&t.querySelector("hui-root"),t){const e=t.lovelace;return e.current_view=t.___curView,e}return null};function Ct(t,e,i){const n=t[e],r=t.slice();return r.splice(e,1),r.splice(i,0,n),r}const Rt="1.6.0";
+var xt;const yt=null!=(null===(xt=window.HTMLSlotElement)||void 0===xt?void 0:xt.prototype.assignedElements)?(t,e)=>t.assignedElements(e):(t,e)=>t.assignedNodes(e).filter(t=>t.nodeType===Node.ELEMENT_NODE);var bt,wt;!function(t){t.language="language",t.system="system",t.comma_decimal="comma_decimal",t.decimal_comma="decimal_comma",t.space_comma="space_comma",t.none="none"}(bt||(bt={})),function(t){t.language="language",t.system="system",t.am_pm="12",t.twenty_four="24"}(wt||(wt={}));var Mt=["closed","locked","off"],Et=function(t,e,i,n){n=n||{},i=null==i?{}:i;var r=new Event(e,{bubbles:void 0===n.bubbles||n.bubbles,cancelable:Boolean(n.cancelable),composed:void 0===n.composed||n.composed});return r.detail=i,t.dispatchEvent(r),r},St=function(t){Et(window,"haptic",t)},Tt=function(t,e,i,n){if(n||(n={action:"more-info"}),!n.confirmation||n.confirmation.exemptions&&n.confirmation.exemptions.some(function(t){return t.user===e.user.id})||(St("warning"),confirm(n.confirmation.text||"Are you sure you want to "+n.action+"?")))switch(n.action){case"more-info":(i.entity||i.camera_image)&&Et(t,"hass-more-info",{entityId:i.entity?i.entity:i.camera_image});break;case"navigate":n.navigation_path&&function(t,e,i){void 0===i&&(i=!1),i?history.replaceState(null,"",e):history.pushState(null,"",e),Et(window,"location-changed",{replace:i})}(0,n.navigation_path);break;case"url":n.url_path&&window.open(n.url_path);break;case"toggle":i.entity&&(function(t,e){(function(t,e,i){void 0===i&&(i=!0);var n,r=function(t){return t.substr(0,t.indexOf("."))}(e),o="group"===r?"homeassistant":r;switch(r){case"lock":n=i?"unlock":"lock";break;case"cover":n=i?"open_cover":"close_cover";break;default:n=i?"turn_on":"turn_off"}t.callService(o,n,{entity_id:e})})(t,e,Mt.includes(t.states[e].state))}(e,i.entity),St("success"));break;case"call-service":if(!n.service)return void St("failure");var r=n.service.split(".",2);e.callService(r[0],r[1],n.service_data,n.target),St("success");break;case"fire-dom-event":Et(t,"ll-custom",n)}};function At(...t){const e=t=>t&&"object"==typeof t;return t.reduce((t,i)=>(Object.keys(i).forEach(n=>{const r=t[n],o=i[n];Array.isArray(r)&&Array.isArray(o)?t[n]=r.concat(...o):e(r)&&e(o)?t[n]=At(r,o):t[n]=o}),t),{})}const Lt=()=>{let t=document.querySelector("home-assistant");if(t=t&&t.shadowRoot,t=t&&t.querySelector("home-assistant-main"),t=t&&t.shadowRoot,t=t&&t.querySelector("app-drawer-layout partial-panel-resolver, ha-drawer partial-panel-resolver"),t=t&&t.shadowRoot||t,t=t&&t.querySelector("ha-panel-lovelace"),t=t&&t.shadowRoot,t=t&&t.querySelector("hui-root"),t){const e=t.lovelace;return e.current_view=t.___curView,e}return null};function Ct(t,e,i){const n=t[e],r=t.slice();return r.splice(e,1),r.splice(i,0,n),r}const Rt="1.6.1";
 /**
  * @license
  * Copyright 2016 Google Inc.
@@ -1148,30 +1148,27 @@ const Si=h`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
                     <mwc-list-item value="yes">yes</mwc-list-item>
                     <mwc-list-item value="no">no</mwc-list-item>
                 </floor3d-select>
-                <paper-input
-                  editable
+                <floor3d-textfield
                   label="Initial Level (default: 0)"
                   .value=${void 0!==t.initialLevel?t.initialLevel:"0"}
                   .configObject=${t}
                   .configAttribute=${"initialLevel"}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Min Level Height (default: 2.0 meters)"
                   .value=${t.minLevelHeight?t.minLevelHeight:"2.0"}
                   .configObject=${t}
                   .configAttribute=${"minLevelHeight"}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Level Cluster Tolerance (default: 0.5)"
                   .value=${t.levelClusterTolerance?t.levelClusterTolerance:"0.5"}
                   .configObject=${t}
                   .configAttribute=${"levelClusterTolerance"}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <floor3d-formfield alignEnd label="Global Scene Light (0..1)" >
                   <floor3d-textfield
                     type="number"
@@ -1308,22 +1305,20 @@ const Si=h`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
                     <mwc-list-item value="yes">yes</mwc-list-item>
                     <mwc-list-item value="no">no</mwc-list-item>
                 </floor3d-select>
-                <paper-input
-                  editable
+                <floor3d-textfield
                   label="Weather Entity (default: weather.forecast_home)"
                   .value=${t.weather_entity?t.weather_entity:"weather.forecast_home"}
                   .configObject=${t}
                   .configAttribute=${"weather_entity"}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
-                <paper-input
-                  editable
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
+                <floor3d-textfield
                   label="Weather Particle Count (default: 2000)"
                   .value=${t.weather_particle_count?t.weather_particle_count:"2000"}
                   .configObject=${t}
                   .configAttribute=${"weather_particle_count"}
-                  @value-changed=${this._valueChanged}
-                ></paper-input>
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"
