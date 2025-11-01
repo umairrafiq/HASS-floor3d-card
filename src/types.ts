@@ -102,6 +102,7 @@ export interface Floor3dCardConfig {
   weather_effects: string;
   weather_entity: string;
   weather_particle_count: number;
+  weather_preview: string;
   x: number;
   y: number;
   z: number;

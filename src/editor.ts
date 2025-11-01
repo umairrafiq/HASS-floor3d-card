@@ -1280,6 +1280,28 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                   .configAttribute=${'weather_particle_count'}
                   @input=${this._valueChanged}
                 ></floor3d-textfield>
+                <floor3d-select
+                  label="Weather Preview/Override (<none>)"
+                  @selected=${this._valueChanged}
+                  .value=${config.weather_preview ? config.weather_preview : ''}
+                  .configObject=${config}
+                  .configAttribute=${'weather_preview'}
+                  .ignoreNull=${false}
+                  @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <mwc-list-item value="">None (use weather entity)</mwc-list-item>
+                    <mwc-list-item value="sunny">☀️ Sunny</mwc-list-item>
+                    <mwc-list-item value="clear-night">🌙 Clear Night</mwc-list-item>
+                    <mwc-list-item value="partlycloudy">⛅ Partly Cloudy</mwc-list-item>
+                    <mwc-list-item value="cloudy">☁️ Cloudy</mwc-list-item>
+                    <mwc-list-item value="rainy">🌧️ Rainy</mwc-list-item>
+                    <mwc-list-item value="pouring">🌧️ Pouring</mwc-list-item>
+                    <mwc-list-item value="snowy">❄️ Snowy</mwc-list-item>
+                    <mwc-list-item value="snowy-rainy">🌨️ Snowy-Rainy</mwc-list-item>
+                    <mwc-list-item value="lightning">⚡ Lightning</mwc-list-item>
+                    <mwc-list-item value="lightning-rainy">⛈️ Thunderstorm</mwc-list-item>
+                    <mwc-list-item value="fog">🌫️ Fog</mwc-list-item>
+                </floor3d-select>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"

@@ -1126,11 +1126,17 @@ export class Floor3dCard extends LitElement {
             }
           }
 
-          // Update weather effects if weather entity exists
+          // Update weather effects if preview is set or weather entity exists
           if (this._config.weather_effects === 'yes' && this._weatherEffects) {
-            const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
-            if (hass.states[weatherEntity]) {
+            if (this._config.weather_preview) {
+              // Always update when preview is set (preview doesn't depend on entity state)
               this._updateWeatherEffects();
+            } else {
+              // Update when weather entity exists
+              const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
+              if (hass.states[weatherEntity]) {
+                this._updateWeatherEffects();
+              }
             }
           }
         }
@@ -1462,23 +1468,36 @@ export class Floor3dCard extends LitElement {
       }
     );
 
-    // Initial weather update if weather entity exists
-    const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
-    if (this._hass.states[weatherEntity]) {
-      const condition = this._hass.states[weatherEntity].state;
-      const attributes = this._hass.states[weatherEntity].attributes;
-      this._weatherEffects.updateWeather(condition, attributes);
+    // Initial weather update - use preview if set, otherwise use weather entity
+    if (this._config.weather_preview) {
+      // Use preview weather condition
+      this._weatherEffects.updateWeather(this._config.weather_preview, {});
+    } else {
+      // Use actual weather entity
+      const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
+      if (this._hass.states[weatherEntity]) {
+        const condition = this._hass.states[weatherEntity].state;
+        const attributes = this._hass.states[weatherEntity].attributes;
+        this._weatherEffects.updateWeather(condition, attributes);
+      }
     }
   }
 
   private _updateWeatherEffects(): void {
     if (!this._weatherEffects) return;
 
-    const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
-    if (this._hass.states[weatherEntity]) {
-      const condition = this._hass.states[weatherEntity].state;
-      const attributes = this._hass.states[weatherEntity].attributes;
-      this._weatherEffects.updateWeather(condition, attributes);
+    // Use preview if set, otherwise use weather entity
+    if (this._config.weather_preview) {
+      // Use preview weather condition
+      this._weatherEffects.updateWeather(this._config.weather_preview, {});
+    } else {
+      // Use actual weather entity
+      const weatherEntity = this._config.weather_entity || 'weather.forecast_home';
+      if (this._hass.states[weatherEntity]) {
+        const condition = this._hass.states[weatherEntity].state;
+        const attributes = this._hass.states[weatherEntity].attributes;
+        this._weatherEffects.updateWeather(condition, attributes);
+      }
     }
   }
 
