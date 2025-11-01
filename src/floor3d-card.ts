@@ -412,6 +412,10 @@ export class Floor3dCard extends LitElement {
       throw new Error(localize('common.invalid_configuration'));
     }
 
+    // Detect weather preview changes
+    const weatherPreviewChanged = this._config &&
+                                   this._config.weather_preview !== config.weather_preview;
+
     this._config = config;
     this._configArray = createConfigArray(this._config);
     this._object_ids = createObjectGroupConfigArray(this._config);
@@ -431,6 +435,12 @@ export class Floor3dCard extends LitElement {
       });
       i += 1;
     });
+
+    // Update weather effects if preview changed
+    if (weatherPreviewChanged && this._weatherEffects) {
+      console.log('Weather preview changed to:', this._config.weather_preview);
+      this._updateWeatherEffects();
+    }
 
     console.log('floor3d-card: Set Config End');
 
@@ -1484,11 +1494,15 @@ export class Floor3dCard extends LitElement {
   }
 
   private _updateWeatherEffects(): void {
-    if (!this._weatherEffects) return;
+    if (!this._weatherEffects) {
+      console.warn('Weather effects not initialized');
+      return;
+    }
 
     // Use preview if set, otherwise use weather entity
     if (this._config.weather_preview) {
       // Use preview weather condition
+      console.log('Updating weather to preview:', this._config.weather_preview);
       this._weatherEffects.updateWeather(this._config.weather_preview, {});
     } else {
       // Use actual weather entity
@@ -1496,7 +1510,10 @@ export class Floor3dCard extends LitElement {
       if (this._hass.states[weatherEntity]) {
         const condition = this._hass.states[weatherEntity].state;
         const attributes = this._hass.states[weatherEntity].attributes;
+        console.log('Updating weather to entity state:', condition);
         this._weatherEffects.updateWeather(condition, attributes);
+      } else {
+        console.warn('Weather entity not found:', weatherEntity);
       }
     }
   }
