@@ -39,6 +39,9 @@ interface Particle {
   z: number;
   speed: number;
   drift?: number;
+  rotationSpeed?: number; // For cloud rotation
+  scale?: number; // For cloud size variation
+  phaseOffset?: number; // For turbulent motion offset
 }
 
 /**
@@ -280,12 +283,14 @@ class CloudEffect {
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly cloud geometry (low-res sphere) - scaled by user preference
-    const geometry = new THREE.SphereGeometry(80 * scale, 6, 6);
+    // Create volumetric cloud geometry - use box for better fog-like appearance
+    const geometry = new THREE.BoxGeometry(100 * scale, 50 * scale, 100 * scale, 2, 2, 2);
     const material = new THREE.MeshLambertMaterial({
-      color: 0xdddddd,
+      color: 0xf0f0f0,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.4,
+      fog: true,
+      depthWrite: false, // Important for proper transparency blending
     });
 
     console.log(`Creating cloud effect: ${particleCount} particles, scale=${scale}`);
@@ -293,15 +298,23 @@ class CloudEffect {
     // Create instanced mesh
     this.mesh = new THREE.InstancedMesh(geometry, material, particleCount);
     this.mesh.visible = false;
+    this.mesh.renderOrder = -1; // Render clouds behind other transparent objects
     this.scene.add(this.mesh);
 
-    // Initialize cloud particles at high altitude (relative to camera)
+    // Initialize cloud particles with varied properties for natural look
     for (let i = 0; i < particleCount; i++) {
+      // Distribute clouds in layers at different heights
+      const layer = Math.floor(i / 10);
+      const heightBase = 100 + layer * 50;
+
       this.particles.push({
-        x: (Math.random() - 0.5) * 2000,
-        y: 100 + Math.random() * 200, // Offset from camera (100-300 units above)
-        z: (Math.random() - 0.5) * 2000,
-        speed: 0.5 + Math.random() * 1,
+        x: (Math.random() - 0.5) * 3000,
+        y: heightBase + Math.random() * 100, // Layer-based altitude
+        z: (Math.random() - 0.5) * 3000,
+        speed: 0.3 + Math.random() * 0.8, // Varied drift speed
+        scale: 0.7 + Math.random() * 0.6, // Size variation (0.7-1.3)
+        rotationSpeed: (Math.random() - 0.5) * 0.02, // Slow rotation
+        phaseOffset: Math.random() * Math.PI * 2, // For turbulent motion
       });
     }
   }
@@ -318,20 +331,45 @@ class CloudEffect {
     const elapsedTime = this.clock.getElapsedTime();
 
     this.particles.forEach((particle, i) => {
-      // Clouds drift slowly - speed multiplier applied
-      particle.x += (windSpeed * 0.3 + particle.speed) * 0.016 * speedMultiplier;
+      // Main horizontal drift (wind + individual speed)
+      particle.x += (windSpeed * 0.3 + particle.speed!) * 0.016 * speedMultiplier;
 
-      // Wrap around when moving off screen
-      if (particle.x > 1000) {
-        particle.x = -1000;
+      // Wrap around when moving off screen - better bounds
+      if (particle.x > 1500) {
+        particle.x = -1500;
+      } else if (particle.x < -1500) {
+        particle.x = 1500;
       }
 
-      // Gentle bobbing motion
-      const bobbing = Math.sin(elapsedTime * 0.5 + i) * 0.5;
+      // Turbulent motion - clouds move in all directions naturally
+      const phase = elapsedTime * 0.2 + particle.phaseOffset!;
+      const turbulenceY = Math.sin(phase) * 20 * speedMultiplier;
+      const turbulenceZ = Math.cos(phase * 0.7) * 15 * speedMultiplier;
 
-      // Update instance matrix (position relative to camera)
-      this.dummy.position.set(camX + particle.x, camY + particle.y + bobbing, camZ + particle.z);
-      this.dummy.scale.set(1 + Math.sin(i) * 0.3, 0.8, 1 + Math.cos(i) * 0.3);
+      // Breathing effect - scale pulsing
+      const breathingScale = 1.0 + Math.sin(elapsedTime * 0.3 + particle.phaseOffset!) * 0.1;
+      const baseScale = particle.scale!;
+      const finalScale = baseScale * breathingScale;
+
+      // Position with turbulent motion
+      this.dummy.position.set(
+        camX + particle.x,
+        camY + particle.y + turbulenceY,
+        camZ + particle.z + turbulenceZ
+      );
+
+      // Rotation on multiple axes for natural spinning
+      this.dummy.rotation.x = elapsedTime * particle.rotationSpeed! * speedMultiplier;
+      this.dummy.rotation.y = elapsedTime * particle.rotationSpeed! * 0.5 * speedMultiplier;
+      this.dummy.rotation.z = Math.sin(elapsedTime * 0.1 + particle.phaseOffset!) * 0.2;
+
+      // Non-uniform scale for more natural cloud shapes
+      this.dummy.scale.set(
+        finalScale * (1.0 + Math.sin(i * 0.5) * 0.2),
+        finalScale * 0.6, // Flatter clouds
+        finalScale * (1.0 + Math.cos(i * 0.7) * 0.2)
+      );
+
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     });
@@ -341,7 +379,7 @@ class CloudEffect {
 
   setIntensity(intensity: number): void {
     const material = this.mesh.material as THREE.MeshLambertMaterial;
-    material.opacity = 0.6 * intensity;
+    material.opacity = 0.4 * intensity; // Match base opacity
 
     // Adjust visible cloud count
     this.mesh.count = Math.floor(this.particleCount * intensity);
