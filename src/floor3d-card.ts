@@ -135,6 +135,7 @@ export class Floor3dCard extends LitElement {
   private _sunSphere: THREE.Mesh;
   private _moonSphere: THREE.Mesh;
   private _weatherEffects: WeatherEffectsManager;
+  private _lastWeatherDebug: number;
   private _levelDetector: LevelDetector;
   private _detectedLevels: DetectedLevel[];
   private _levelsAutoDetected = false;
@@ -3819,6 +3820,12 @@ export class Floor3dCard extends LitElement {
 
     // Update weather effects if enabled
     if (this._weatherEffects) {
+      // Debug log every 60 frames
+      const now = Date.now();
+      if (!this._lastWeatherDebug || now - this._lastWeatherDebug > 1000) {
+        console.log(`Animation loop: Calling weather update with camera pos=(${this._camera.position.x.toFixed(0)}, ${this._camera.position.y.toFixed(0)}, ${this._camera.position.z.toFixed(0)})`);
+        this._lastWeatherDebug = now;
+      }
       this._weatherEffects.update(this._camera.position);
     }
 

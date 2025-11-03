@@ -83,7 +83,10 @@ class RainEffect {
   }
 
   update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
-    if (!this.mesh.visible) return;
+    if (!this.mesh.visible) {
+      console.log(`${this.constructor.name} update called but mesh.visible=false`);
+      return;
+    }
 
     const camX = cameraPosition?.x || 0;
     const camY = cameraPosition?.y || 0;
@@ -191,7 +194,10 @@ class SnowEffect {
   }
 
   update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
-    if (!this.mesh.visible) return;
+    if (!this.mesh.visible) {
+      console.log(`${this.constructor.name} update called but mesh.visible=false`);
+      return;
+    }
 
     const camX = cameraPosition?.x || 0;
     const camY = cameraPosition?.y || 0;
@@ -300,7 +306,10 @@ class CloudEffect {
   }
 
   update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
-    if (!this.mesh.visible) return;
+    if (!this.mesh.visible) {
+      console.log(`${this.constructor.name} update called but mesh.visible=false`);
+      return;
+    }
 
     const camX = cameraPosition?.x || 0;
     const camY = cameraPosition?.y || 0;
@@ -629,7 +638,10 @@ export class WeatherEffectsManager {
    * Call this in your animation loop
    */
   update(cameraPosition?: THREE.Vector3): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      console.log('Weather update called but config.enabled=false');
+      return;
+    }
 
     this.rainEffect.update(this.windSpeed, cameraPosition);
     this.snowEffect.update(this.windSpeed, cameraPosition);
