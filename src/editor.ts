@@ -1309,6 +1309,39 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                   .configAttribute=${'weather_scale'}
                   @input=${this._valueChanged}
                 ></floor3d-textfield>
+                <floor3d-select
+                  label="Ground Color (plane beneath model)"
+                  @selected=${this._valueChanged}
+                  .value=${config.groundColor ? config.groundColor : 'darkgray'}
+                  .configObject=${config}
+                  .configAttribute=${'groundColor'}
+                  .ignoreNull=${false}
+                  @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <mwc-list-item value="darkgray">🟫 Dark Gray (#444444)</mwc-list-item>
+                    <mwc-list-item value="black">⬛ Black (#000000)</mwc-list-item>
+                    <mwc-list-item value="white">⬜ White (#FFFFFF)</mwc-list-item>
+                    <mwc-list-item value="grass">🟩 Grass (#4CAF50)</mwc-list-item>
+                    <mwc-list-item value="concrete">🟦 Concrete (#9E9E9E)</mwc-list-item>
+                    <mwc-list-item value="brown">🟤 Brown (#8B4513)</mwc-list-item>
+                    <mwc-list-item value="transparent">⬜ Transparent</mwc-list-item>
+                </floor3d-select>
+                <floor3d-select
+                  label="Background Color (sky/void color)"
+                  @selected=${this._valueChanged}
+                  .value=${config.backgroundColor ? config.backgroundColor : '#aaaaaa'}
+                  .configObject=${config}
+                  .configAttribute=${'backgroundColor'}
+                  .ignoreNull=${false}
+                  @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <mwc-list-item value="#aaaaaa">🌫️ Light Gray (default)</mwc-list-item>
+                    <mwc-list-item value="#000000">⬛ Black</mwc-list-item>
+                    <mwc-list-item value="#FFFFFF">⬜ White</mwc-list-item>
+                    <mwc-list-item value="#87CEEB">🌤️ Sky Blue</mwc-list-item>
+                    <mwc-list-item value="#1a1a1a">🌑 Very Dark Gray</mwc-list-item>
+                    <mwc-list-item value="transparent">⬜ Transparent</mwc-list-item>
+                </floor3d-select>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"

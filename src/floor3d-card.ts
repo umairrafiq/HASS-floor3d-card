@@ -1187,8 +1187,27 @@ export class Floor3dCard extends LitElement {
 
     console.log('Init Ground');
 
+    // Map ground color names to hex values
+    const groundColorMap = {
+      'black': 0x000000,
+      'white': 0xffffff,
+      'darkgray': 0x444444,
+      'grass': 0x4CAF50,
+      'concrete': 0x9E9E9E,
+      'brown': 0x8B4513,
+      'transparent': 0x000000  // Will handle transparency separately
+    };
+
+    const groundColorName = this._config.groundColor || 'darkgray';
+    const groundColor = groundColorMap[groundColorName] || 0x444444;
+    const isTransparent = groundColorName === 'transparent';
+
     const groundGeo = new THREE.PlaneGeometry(10000, 10000);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x444444 }); // Dark gray
+    const groundMat = new THREE.MeshLambertMaterial({
+      color: groundColor,
+      transparent: isTransparent,
+      opacity: isTransparent ? 0 : 1
+    });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -5;
     ground.rotation.x = -Math.PI / 2;

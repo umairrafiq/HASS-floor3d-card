@@ -21,6 +21,7 @@ export interface Floor3dCardConfig {
   style: string;
   header: string;
   backgroundColor: string;
+  groundColor: string;
   globalLightPower: string;
   hideLevelsMenu: string;
   initialLevel: number;
