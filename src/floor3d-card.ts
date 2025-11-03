@@ -1188,8 +1188,7 @@ export class Floor3dCard extends LitElement {
     console.log('Init Ground');
 
     const groundGeo = new THREE.PlaneGeometry(10000, 10000);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    groundMat.color.setHSL(0.095, 1, 0.75);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x444444 }); // Dark gray
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -5;
     ground.rotation.x = -Math.PI / 2;
