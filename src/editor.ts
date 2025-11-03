@@ -1302,6 +1302,13 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                     <mwc-list-item value="lightning-rainy">⛈️ Thunderstorm</mwc-list-item>
                     <mwc-list-item value="fog">🌫️ Fog</mwc-list-item>
                 </floor3d-select>
+                <floor3d-textfield
+                  label="Weather Scale (default: 10, increase for larger models)"
+                  .value=${config.weather_scale !== undefined ? config.weather_scale : '10'}
+                  .configObject=${config}
+                  .configAttribute=${'weather_scale'}
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <paper-input
                   editable
                   label="North Direction {x: xxxx,z: zzzzzz }"

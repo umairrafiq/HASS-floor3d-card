@@ -29,6 +29,7 @@ export interface WeatherEffectsConfig {
   particleCount?: number;
   windSpeed?: number;
   cloudCover?: number;
+  weatherScale?: number; // Scale multiplier for particle sizes
 }
 
 interface Particle {
@@ -50,18 +51,20 @@ class RainEffect {
   private dummy: THREE.Object3D = new THREE.Object3D();
   private clock: THREE.Clock;
 
-  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 2000) {
+  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 2000, scale = 1.0) {
     this.scene = scene;
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly rain drop geometry (elongated cylinder) - scaled up 10x for visibility
-    const geometry = new THREE.CylinderGeometry(1, 1, 20, 3);
+    // Create low-poly rain drop geometry (elongated cylinder) - scaled by user preference
+    const geometry = new THREE.CylinderGeometry(1 * scale, 1 * scale, 20 * scale, 3);
     const material = new THREE.MeshBasicMaterial({
       color: 0x8888aa,
       transparent: true,
       opacity: 0.6,
     });
+
+    console.log(`Creating rain effect: ${particleCount} particles, scale=${scale}`);
 
     // Create instanced mesh (single draw call for all raindrops)
     this.mesh = new THREE.InstancedMesh(geometry, material, particleCount);
@@ -85,6 +88,18 @@ class RainEffect {
     const camX = cameraPosition?.x || 0;
     const camY = cameraPosition?.y || 0;
     const camZ = cameraPosition?.z || 0;
+
+    // Debug logging every 60 frames for rain
+    const elapsedTime = this.clock.getElapsedTime();
+    if (Math.floor(elapsedTime * 60) % 60 === 0 && this.particles.length > 0) {
+      const firstParticle = this.particles[0];
+      const worldX = camX + firstParticle.x;
+      const worldY = camY + firstParticle.y;
+      const worldZ = camZ + firstParticle.z;
+      console.log(`RainEffect DEBUG: Camera=(${camX.toFixed(0)}, ${camY.toFixed(0)}, ${camZ.toFixed(0)}), ` +
+                  `FirstParticle world pos=(${worldX.toFixed(0)}, ${worldY.toFixed(0)}, ${worldZ.toFixed(0)}), ` +
+                  `mesh.visible=${this.mesh.visible}, count=${this.mesh.count}`);
+    }
 
     this.particles.forEach((particle, i) => {
       // Rain falls straight down with some wind drift
@@ -117,6 +132,7 @@ class RainEffect {
   }
 
   show(): void {
+    console.log('RainEffect: Showing rain particles');
     this.mesh.visible = true;
   }
 
@@ -142,18 +158,20 @@ class SnowEffect {
   private dummy: THREE.Object3D = new THREE.Object3D();
   private clock: THREE.Clock;
 
-  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 1500) {
+  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 1500, scale = 1.0) {
     this.scene = scene;
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly snowflake geometry (simple octahedron) - scaled up 10x for visibility
-    const geometry = new THREE.OctahedronGeometry(5, 0);
+    // Create low-poly snowflake geometry (simple octahedron) - scaled by user preference
+    const geometry = new THREE.OctahedronGeometry(5 * scale, 0);
     const material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0.9,
     });
+
+    console.log(`Creating snow effect: ${particleCount} particles, scale=${scale}`);
 
     // Create instanced mesh (single draw call for all snowflakes)
     this.mesh = new THREE.InstancedMesh(geometry, material, particleCount);
@@ -179,6 +197,17 @@ class SnowEffect {
     const camY = cameraPosition?.y || 0;
     const camZ = cameraPosition?.z || 0;
     const elapsedTime = this.clock.getElapsedTime();
+
+    // Debug logging every 60 frames (once per second at 60fps)
+    if (Math.floor(elapsedTime * 60) % 60 === 0 && this.particles.length > 0) {
+      const firstParticle = this.particles[0];
+      const worldX = camX + firstParticle.x;
+      const worldY = camY + firstParticle.y;
+      const worldZ = camZ + firstParticle.z;
+      console.log(`SnowEffect DEBUG: Camera=(${camX.toFixed(0)}, ${camY.toFixed(0)}, ${camZ.toFixed(0)}), ` +
+                  `FirstParticle world pos=(${worldX.toFixed(0)}, ${worldY.toFixed(0)}, ${worldZ.toFixed(0)}), ` +
+                  `mesh.visible=${this.mesh.visible}, count=${this.mesh.count}`);
+    }
 
     this.particles.forEach((particle, i) => {
       // Snow falls slowly with drift
@@ -239,18 +268,20 @@ class CloudEffect {
   private dummy: THREE.Object3D = new THREE.Object3D();
   private clock: THREE.Clock;
 
-  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 30) {
+  constructor(scene: THREE.Scene, clock: THREE.Clock, particleCount = 30, scale = 1.0) {
     this.scene = scene;
     this.clock = clock;
     this.particleCount = particleCount;
 
-    // Create low-poly cloud geometry (low-res sphere) - scaled up for visibility
-    const geometry = new THREE.SphereGeometry(80, 6, 6);
+    // Create low-poly cloud geometry (low-res sphere) - scaled by user preference
+    const geometry = new THREE.SphereGeometry(80 * scale, 6, 6);
     const material = new THREE.MeshLambertMaterial({
       color: 0xdddddd,
       transparent: true,
       opacity: 0.7,
     });
+
+    console.log(`Creating cloud effect: ${particleCount} particles, scale=${scale}`);
 
     // Create instanced mesh
     this.mesh = new THREE.InstancedMesh(geometry, material, particleCount);
@@ -408,13 +439,18 @@ export class WeatherEffectsManager {
       particleCount: 2000,
       windSpeed: 0,
       cloudCover: 0.5,
+      weatherScale: 1.0,
       ...config,
     };
 
-    // Initialize effects with instanced meshes (very performant)
-    this.rainEffect = new RainEffect(scene, clock, this.config.particleCount);
-    this.snowEffect = new SnowEffect(scene, clock, Math.floor(this.config.particleCount! * 0.75));
-    this.cloudEffect = new CloudEffect(scene, clock, 30);
+    const scale = this.config.weatherScale || 1.0;
+
+    console.log(`Initializing weather effects with scale=${scale}, particleCount=${this.config.particleCount}`);
+
+    // Initialize effects with instanced meshes (very performant) - pass scale to constructors
+    this.rainEffect = new RainEffect(scene, clock, this.config.particleCount!, scale);
+    this.snowEffect = new SnowEffect(scene, clock, Math.floor(this.config.particleCount! * 0.75), scale);
+    this.cloudEffect = new CloudEffect(scene, clock, 30, scale);
     this.lightningEffect = new LightningEffect(scene);
   }
 
@@ -487,6 +523,8 @@ export class WeatherEffectsManager {
   }
 
   private applyWeatherCondition(condition: WeatherCondition): void {
+    console.log(`Applying weather condition: ${condition}`);
+
     switch (condition) {
       case WeatherCondition.LIGHTNING:
       case WeatherCondition.LIGHTNING_RAINY:
