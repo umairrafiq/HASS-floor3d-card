@@ -441,6 +441,8 @@ export class Floor3dCard extends LitElement {
     if (weatherPreviewChanged && this._weatherEffects) {
       console.log('Weather preview changed to:', this._config.weather_preview);
       this._updateWeatherEffects();
+      // Ensure animation loop is running for weather
+      this._startOrStopAnimationLoop();
     }
 
     console.log('floor3d-card: Set Config End');
@@ -1496,6 +1498,9 @@ export class Floor3dCard extends LitElement {
         this._weatherEffects.updateWeather(condition, attributes);
       }
     }
+
+    // Start animation loop for weather effects
+    this._startOrStopAnimationLoop();
   }
 
   private _updateWeatherEffects(): void {
@@ -3773,8 +3778,12 @@ export class Floor3dCard extends LitElement {
   }
 
   private _needsAnimationLoop() {
-    // Check rotations and Tween.getAll()
-    return this._rotation_state.some((item) => item !== 0) || TWEEN.getAll().length > 0;
+    // Check rotations, Tweens, and weather effects
+    const hasRotations = this._rotation_state.some((item) => item !== 0);
+    const hasTweens = TWEEN.getAll().length > 0;
+    const hasWeather = this._config.weather_effects === 'yes' && this._weatherEffects;
+
+    return hasRotations || hasTweens || hasWeather;
   }
 
   // If every rotating entity and Tween is stopped, disable animation
