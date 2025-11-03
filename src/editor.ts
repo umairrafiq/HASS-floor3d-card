@@ -1309,6 +1309,13 @@ export class Floor3dCardEditor extends LitElement implements LovelaceCardEditor 
                   .configAttribute=${'weather_scale'}
                   @input=${this._valueChanged}
                 ></floor3d-textfield>
+                <floor3d-textfield
+                  label="Weather Speed (default: 1.0, higher = faster)"
+                  .value=${config.weather_speed !== undefined ? config.weather_speed : '1.0'}
+                  .configObject=${config}
+                  .configAttribute=${'weather_speed'}
+                  @input=${this._valueChanged}
+                ></floor3d-textfield>
                 <floor3d-select
                   label="Ground Color (plane beneath model)"
                   @selected=${this._valueChanged}

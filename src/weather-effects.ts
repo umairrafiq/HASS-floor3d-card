@@ -30,6 +30,7 @@ export interface WeatherEffectsConfig {
   windSpeed?: number;
   cloudCover?: number;
   weatherScale?: number; // Scale multiplier for particle sizes
+  weatherSpeed?: number; // Speed multiplier for animation (default: 1.0)
 }
 
 interface Particle {
@@ -82,7 +83,7 @@ class RainEffect {
     }
   }
 
-  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3, speedMultiplier = 1.0): void {
     if (!this.mesh.visible) {
       console.log(`${this.constructor.name} update called but mesh.visible=false`);
       return;
@@ -105,9 +106,9 @@ class RainEffect {
     }
 
     this.particles.forEach((particle, i) => {
-      // Rain falls straight down with some wind drift
-      particle.y -= particle.speed * 0.016; // Approximate 60fps delta
-      particle.x += windSpeed * 0.5;
+      // Rain falls straight down with some wind drift - speed multiplier applied
+      particle.y -= particle.speed * 0.016 * speedMultiplier; // Approximate 60fps delta
+      particle.x += windSpeed * 0.5 * speedMultiplier;
 
       // Reset when hitting ground (below camera)
       if (particle.y < -500) {
@@ -193,7 +194,7 @@ class SnowEffect {
     }
   }
 
-  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3, speedMultiplier = 1.0): void {
     if (!this.mesh.visible) {
       console.log(`${this.constructor.name} update called but mesh.visible=false`);
       return;
@@ -216,10 +217,10 @@ class SnowEffect {
     }
 
     this.particles.forEach((particle, i) => {
-      // Snow falls slowly with drift
-      particle.y -= particle.speed * 0.016;
+      // Snow falls slowly with drift - speed multiplier applied
+      particle.y -= particle.speed * 0.016 * speedMultiplier;
       // Sinusoidal drift for realistic floating motion
-      particle.x += Math.sin(elapsedTime + i) * particle.drift! + windSpeed * 0.3;
+      particle.x += (Math.sin(elapsedTime + i) * particle.drift! + windSpeed * 0.3) * speedMultiplier;
 
       // Reset when hitting ground (below camera)
       if (particle.y < -500) {
@@ -305,7 +306,7 @@ class CloudEffect {
     }
   }
 
-  update(windSpeed = 0, cameraPosition?: THREE.Vector3): void {
+  update(windSpeed = 0, cameraPosition?: THREE.Vector3, speedMultiplier = 1.0): void {
     if (!this.mesh.visible) {
       console.log(`${this.constructor.name} update called but mesh.visible=false`);
       return;
@@ -317,8 +318,8 @@ class CloudEffect {
     const elapsedTime = this.clock.getElapsedTime();
 
     this.particles.forEach((particle, i) => {
-      // Clouds drift slowly
-      particle.x += (windSpeed * 0.3 + particle.speed) * 0.016;
+      // Clouds drift slowly - speed multiplier applied
+      particle.x += (windSpeed * 0.3 + particle.speed) * 0.016 * speedMultiplier;
 
       // Wrap around when moving off screen
       if (particle.x > 1000) {
@@ -449,12 +450,13 @@ export class WeatherEffectsManager {
       windSpeed: 0,
       cloudCover: 0.5,
       weatherScale: 1.0,
+      weatherSpeed: 1.0,
       ...config,
     };
 
     const scale = this.config.weatherScale || 1.0;
 
-    console.log(`Initializing weather effects with scale=${scale}, particleCount=${this.config.particleCount}`);
+    console.log(`Initializing weather effects with scale=${scale}, speed=${this.config.weatherSpeed}, particleCount=${this.config.particleCount}`);
 
     // Initialize effects with instanced meshes (very performant) - pass scale to constructors
     this.rainEffect = new RainEffect(scene, clock, this.config.particleCount!, scale);
@@ -643,9 +645,10 @@ export class WeatherEffectsManager {
       return;
     }
 
-    this.rainEffect.update(this.windSpeed, cameraPosition);
-    this.snowEffect.update(this.windSpeed, cameraPosition);
-    this.cloudEffect.update(this.windSpeed, cameraPosition);
+    const speedMultiplier = this.config.weatherSpeed || 1.0;
+    this.rainEffect.update(this.windSpeed, cameraPosition, speedMultiplier);
+    this.snowEffect.update(this.windSpeed, cameraPosition, speedMultiplier);
+    this.cloudEffect.update(this.windSpeed, cameraPosition, speedMultiplier);
     this.lightningEffect.update(cameraPosition);
   }
 

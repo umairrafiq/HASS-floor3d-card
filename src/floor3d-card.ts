@@ -1489,8 +1489,9 @@ export class Floor3dCard extends LitElement {
 
     const particleCount = this._config.weather_particle_count || 2000;
     const weatherScale = this._config.weather_scale !== undefined ? this._config.weather_scale : 10;
+    const weatherSpeed = this._config.weather_speed !== undefined ? this._config.weather_speed : 1.0;
 
-    console.log(`Weather config: particleCount=${particleCount}, scale=${weatherScale}`);
+    console.log(`Weather config: particleCount=${particleCount}, scale=${weatherScale}, speed=${weatherSpeed}`);
 
     this._weatherEffects = new WeatherEffectsManager(
       this._scene,
@@ -1500,6 +1501,7 @@ export class Floor3dCard extends LitElement {
         enabled: true,
         particleCount: particleCount,
         weatherScale: weatherScale,
+        weatherSpeed: weatherSpeed,
       }
     );
 
